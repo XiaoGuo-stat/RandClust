@@ -39,7 +39,7 @@ Default is \code{FALSE}.}
 }
 \value{
 \item{A}{The adjacency matrix of generated networks. Only returned if \code{graph=FALSE}.}
-        \item{g}{An \code{\link[igraph]{igraph}} object. Only returned if \code{graph=TRUE}.}
+        \item{g}{An \code{igraph} object. Only returned if \code{graph=TRUE}.}
 }
 \description{
 Produce directed networks or their adjacency matrices from (degree-corrected) stochastic co-block models.

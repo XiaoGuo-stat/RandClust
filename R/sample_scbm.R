@@ -27,7 +27,7 @@
 #' @param graph   If \code{TRUE}, an  \code{igraph} object is returned. Otherwise, an adjacency matrix is returned.
 #'                Default is \code{FALSE}.
 #' @return \item{A}{The adjacency matrix of generated networks. Only returned if \code{graph=FALSE}.}
-#'         \item{g}{An \code{\link[igraph]{igraph}} object. Only returned if \code{graph=TRUE}.}
+#'         \item{g}{An \code{igraph} object. Only returned if \code{graph=TRUE}.}
 
 #'
 #' @export sample_scbm
