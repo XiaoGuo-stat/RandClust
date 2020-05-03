@@ -1,0 +1,96 @@
+#' Generate directed networks from (degree-corrected) stochastic co-block models.
+#'
+#' Produce directed networks or their adjacency matrices from (degree-corrected) stochastic co-block models.
+#'
+#' This function generates directed networks using stochstic co-block models and degree-corrected stochastic
+#' co-block models. In the stochastic co-block models, nodes in the same row (column) block
+#' are stochastic equivalent senders (receivers) in the sense that two nodes send out (receive) an edge to (from) a third node
+#' with the same probability if these two nodes are in the same row (column) cluster. In the
+#' degree-corrected stochastic co-block model, the probability of an edge also depends on the nodes propensity.
+
+
+#'
+#'
+#' @param type If \code{type="scbm"}, the network is generated from the stochastic co-block model.
+#'             If \code{type="dc-scbm"}, the network is generated from the degree-corrected stochastic co-block model.
+#' @param cluster.y The row cluster vector (from \code{1:k}) with the numbers
+#'                  indicating which row cluster each node is assigned.
+#' @param cluster.z The column cluster vector (from \code{1:k}) with the numbers
+#'                  indicating which row cluster each node is assigned. \code{cluster.z} and \code{cluster.y}
+#'                  must have the same length but not necessarily indicate the same clusters and cluster numbers.
+#' @param theta.y  The vector indicating the propensity of each node to send edges. Suggested value is from 0 to 1.
+#'                 Only required when \code{type="dc-scbm"}.
+#' @param theta.z  The vector indicating the propensity of each node to receive edges. Suggested value is from 0 to 1.
+#'                 Only required when \code{type="dc-scbm"}.
+#' @param probmat The link probability matrix with dimension \code{c(max(cluster.y, cluster.z))}. \code{probmat[i,j]}
+#'                is proportional to the probability of an edge from nodes in row cluster \code{i} to nodes in column cluster \code{j}.
+#' @param graph   If \code{TRUE}, an  \code{igraph} object is returned. Otherwise, an adjacency matrix is returned.
+#'                Default is \code{FALSE}.
+#' @return \item{A}{The adjacency matrix of generated networks. Only returned if \code{graph=FALSE}.}
+#'         \item{g}{An \code{\link[igraph]{igraph}} object. Only returned if \code{graph=TRUE}.}
+
+#'
+#' @export sample_scbm
+#' @references K. Rohe, T. Qin, and B. Yu. (2016)
+#' \emph{Co-clustering directed graphs to discover asymmetries and directional communities},
+#' \emph{Proceedings of the National Academy of Sciences, Vol. 113(45), 12679-12684}\cr
+#' \url{https://www.pnas.org/content/113/45/12679}\cr
+#'
+#' @examples
+#' # The four parameter stochastic co-block model
+#' n <- 100
+#' ky <- 2
+#' kz <- 2
+#' cluster.y <- rep(1:ky, each = n/ky)
+#' cluster.z <- rep(1:kz, each = n/kz)
+#' probmat <- matrix(0.01, ky, ky)
+#' diag(probmat) <- 0.1
+#' g1 <- sample_scbm(type = "scbm", cluster.y, cluster.z, probmat = probmat, graph = TRUE)
+#' plot(g1, vertex.size = 8, edge.arrow.size=0.3, vertex.label = NA, vertex.color = c("green3", "cyan3")[cluster.y],
+#' vertex.frame.color = NA)
+#'
+#' # The degree-corrected stochastic co-block model
+#' n <- 50
+#' ky <- 2
+#' kz <- 2
+#' cluster.y <- rep(1:ky, each = n/ky)
+#' cluster.z <- rep(1:kz, each = n/kz)
+#' probmat <- matrix(0.5, ky, kz)
+#' diag(probmat) <- 0.8
+#' theta.y <- rep(0.8,n)
+#' theta.y [c(1,n)] <- 1
+#' theta.z <- rep(1,n)
+#' g2 <- sample_scbm(type = "dc-scbm", cluster.y, cluster.z, theta.y, theta.z, probmat, graph = TRUE)
+#' plot(g2, vertex.size = 8, edge.arrow.size=0.3, vertex.label = NA, vertex.color = c("red", "purple")[cluster.y],
+#' vertex.frame.color = NA)
+#'
+
+
+
+sample_scbm <- function(type = c("scbm", "dc-scbm"), cluster.y, cluster.z, theta.y, theta.z, probmat, graph = FALSE){
+  n <- length(cluster.y)
+  A <- Matrix(0, n, n, sparse = TRUE)
+  if (type=="scbm"){
+    for(i in 1:n){
+      for(j in 1:n){
+        A[i, j] <- rbinom (1, 1, probmat[cluster.y[i], cluster.z[j]])
+      }
+    }
+    diag(A) <- 0
+  }
+  if (type=="dc-scbm"){
+    for(i in 1:n){
+      for(j in 1:n){
+        A[i, j] <- theta.y[i]*theta.z[j]*rbinom (1, 1, probmat[cluster.y[i], cluster.z[j]])
+      }
+    }
+    diag(A) <- 0
+  }
+  if(graph == FALSE){
+    return(A)
+  }
+  if(graph == TRUE){
+    g<-graph_from_adjacency_matrix(A, mode="directed")
+    return(g)
+  }
+}

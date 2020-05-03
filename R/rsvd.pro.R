@@ -1,0 +1,156 @@
+#' Compute randomized SVD of a matrix using random projection
+#'
+#' Compute the randomized SVD of a matrix by random projection. The randomized
+#' singular vectors and singular values are computed. Can deal with very large
+#' data matrix.
+#'
+#' This function computes the randomized SVD of a data matrix using the random
+#' projection scheme. The data matrix \code{A} is first compressed to a
+#' smaller matrix with its columns (rows) being the linear combinations of the
+#' rows (columns) of \code{A}. The classical SVD are then performed on the smaller
+#' matrix. The randomized SVD of \code{A} are obtained by postprocessing.
+#'
+#'
+#'
+#'
+#' @param A Input data matrix. Not necessarily be the adjacency matrix of a network.
+#' @param rank The target rank of the low-rank decomposition.
+#' @param p The oversampling parameter. It need to be a positive integer number. Default value is 10.
+#' @param q The power parameter. It need to be a positive integer number. Default value is 2.
+#' @param dist The distribution of the entry of the random test matrix. Can be \code{"normal"} (standard normal distribution),
+#'             \code{"unif"} (uniform distribution from -1 to 1), or \code{"rademacher"} (randemacher distribution). Default
+#'             is \code{"normal"}.
+#' @param approA A logical variable indicating whether the approximated \code{A} is returned. Default is \code{FALSE}.
+#'
+#' @return \item{u}{The randomized left \code{rank+p} singular vectors.} \item{v}{The randomized right \code{rank+p} singular vectors.}
+#'         \item{d}{The \code{rank+p} singular values.} \item{approA}{The approximated data matrix obtained by {\eqn{udv}'} if requested.}
+#'
+#' @references N. Halko, P.-G. Martinsson, and J. A. Tropp. (2011)
+#' \emph{Finding structure with randomness: Probabilistic algorithms for constructing approximate matrix decompositions},
+#' \emph{SIAM review, Vol. 53(2), 217-288}\cr
+#' \url{https://epubs.siam.org/doi/10.1137/090771806}\cr
+#'
+#' @examples
+#'
+#' n <- 100
+#' rank <- 2
+#' clustertrue.y <- rep(1:rank, each = n/rank)
+#' clustertrue.z <- rep(1:rank, each = n/rank)
+#' A <- matrix(0, n, n)
+#' for(i in 1:n){
+#'      for(j in 1:n){
+#'         A[i,j]<-ifelse(clustertrue.y[i] == clustertrue.z[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
+#'     }
+#' }
+#' diag(A)<-0
+#' rsvd.pro(A, rank)
+#'
+#' @export rsvd.pro
+#'
+#'
+rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE){
+
+  n <- nrow(A)
+	Acoord <- as(A, "dgTMatrix")
+	Ai <- Acoord@i
+	Aj <- Acoord@j
+
+    #The approximation for the column space
+    #Set the reduced dimension for the column space
+
+    ly <- round(rank) + round(p)
+
+    #Generate a random test matrix Oy
+
+    Oy <- switch(dist,
+                normal = matrix(zrnormR(ly*n), n, ly),
+                unif = matrix(runif(ly*n), n, ly),
+                rademacher = matrix(sample(c(-1,1), (ly*n), replace = TRUE, prob = c(0.5,0.5)), n, ly),
+                stop("Selected sampling distribution is not supported!"))
+
+    #Build the sketch matrix Y : Y = A * Oy
+
+	  Y <- spbin_prod(Ai, Aj, Oy)
+    remove(Oy)
+
+    #Orthogonalize Y using QR decomposition: Y=QR
+
+    if( q > 0 ) {
+        for( i in 1:q) {
+            Y <- qr_Q(Y)
+            Z <- spbin_crossprod(Ai, Aj, Y)
+            Z <- qr_Q(Z)
+            Y <- spbin_prod(Ai, Aj, Z)
+        }
+        remove(Z)
+    }
+
+    Q <- qr_Q(Y)
+    remove(Y)
+
+    #The approximation for the row space
+    #Set the reduced dimension for the row space
+
+    lz <- round(rank) + round(p)
+
+
+    #Generate a random test matrix Oz
+
+    Oz <- switch(dist,
+                normal = matrix(zrnormR(lz*n), n, lz),
+                unif = matrix(runif(lz*n), n, lz),
+                rademacher = matrix(sample(c(-1,1), (lz*n), replace = TRUE, prob = c(0.5,0.5)), n, lz),
+                stop("Selected sampling distribution is not supported!"))
+
+
+    #Build sketch matrix Y : Y = A' * Oz
+
+	  Y <- spbin_crossprod(Ai, Aj, Oz)
+    remove(Oz)
+
+
+    #Orthogonalize Y using QR decomposition: Y=QR
+
+    if( q > 0 ) {
+        for( i in 1:q) {
+            Y <- qr_Q(Y)
+            Z <- spbin_prod(Ai, Aj, Y)
+            Z <- qr_Q(Z)
+            Y <- spbin_crossprod(Ai, Aj, Z)
+        }
+        remove(Z)
+    }
+
+    T <- qr_Q(Y)
+    remove(Y)
+
+
+
+
+    #Obtain the smaller matrix B := Q' * A * T
+
+    B <- crossprod(Q , spbin_prod(Ai, Aj, T))
+
+    #Compute the SVD of B and recover the approximated singular vectors of A
+    fit <- svd(B)
+    u <- Q %*% fit$u
+    v <- T %*% fit$v
+    d <- T %*% fit$d
+
+
+
+   #Output the result
+
+   if(approA == FALSE){
+      list(u = u, v = v, d = d)
+   }
+	 else{
+
+	 #Compute the approximated matrix of the original A
+
+	    C  <- Q %*% B %*% t(T)
+	    list(u = u, v = v, d = d, approA = C)
+	 }
+
+
+}

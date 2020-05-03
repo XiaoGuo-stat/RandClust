@@ -1,0 +1,8 @@
+exportPattern("^[[:alpha:]]+")
+importFrom(RcppZiggurat, zrnormR)
+importFrom(randcoclust, qr_Q, spbin_prod, spbin_crossprod, rsample)
+importFrom(stats, runif)
+importFrom(RSpectra, svds)
+importFrom(Gmedian, kGmedian)
+importFrom(igraph, graph_from_adjacency_matrix, plot.igraph)
+import(Matrix)
