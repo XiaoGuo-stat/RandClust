@@ -9,20 +9,13 @@ Description: More about what it does (maybe more than one line)
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-Imports: 
+Imports:
+    Rcpp,
     RSpectra,
-    randcoclust,
     stats,
     RcppZiggurat,
     Matrix,
     Gmedian,
     igraph
-RoxygenNote: 7.0.2
-Dependes:
-    RSpectra,
-    randcoclust,
-    stats,
-    RcppZiggurat,
-    Matrix,
-    Gmedian,
-    igraph
+LinkingTo: Rcpp, RcppEigen
+RoxygenNote: 7.1.0
