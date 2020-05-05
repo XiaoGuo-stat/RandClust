@@ -34,7 +34,7 @@ data matrix.
 This function computes the randomized SVD of a data matrix using the random
 projection scheme. The data matrix \code{A} is first compressed to a
 smaller matrix with its columns (rows) being the linear combinations of the
-rows (columns) of \code{A}. The classical SVD are then performed on the smaller
+columns (rows) of \code{A}. The classical SVD is then performed on the smaller
 matrix. The randomized SVD of \code{A} are obtained by postprocessing.
 }
 \examples{

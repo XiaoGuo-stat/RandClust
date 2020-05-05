@@ -7,7 +7,7 @@
 #' This function computes the randomized SVD of a data matrix using the random
 #' projection scheme. The data matrix \code{A} is first compressed to a
 #' smaller matrix with its columns (rows) being the linear combinations of the
-#' rows (columns) of \code{A}. The classical SVD are then performed on the smaller
+#' columns (rows) of \code{A}. The classical SVD is then performed on the smaller
 #' matrix. The randomized SVD of \code{A} are obtained by postprocessing.
 #'
 #'
@@ -66,7 +66,7 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE){
                 normal = matrix(zrnormR(ly*n), n, ly),
                 unif = matrix(runif(ly*n), n, ly),
                 rademacher = matrix(sample(c(-1,1), (ly*n), replace = TRUE, prob = c(0.5,0.5)), n, ly),
-                stop("Selected sampling distribution is not supported!"))
+                stop("The sampling distribution is not supported!"))
 
     #Build the sketch matrix Y : Y = A * Oy
 
@@ -100,7 +100,7 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE){
                 normal = matrix(zrnormR(lz*n), n, lz),
                 unif = matrix(runif(lz*n), n, lz),
                 rademacher = matrix(sample(c(-1,1), (lz*n), replace = TRUE, prob = c(0.5,0.5)), n, lz),
-                stop("Selected sampling distribution is not supported!"))
+                stop("The sampling distribution is not supported!"))
 
 
     #Build sketch matrix Y : Y = A' * Oz
@@ -135,7 +135,7 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE){
     fit <- svd(B)
     u <- Q %*% fit$u
     v <- T %*% fit$v
-    d <- T %*% fit$d
+    d <- fit$d
 
 
 
