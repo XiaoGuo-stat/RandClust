@@ -29,6 +29,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rsample_sym
+Rcpp::S4 rsample_sym(Rcpp::S4 A, double P, bool use_lower);
+RcppExport SEXP _RandClust_rsample_sym(SEXP ASEXP, SEXP PSEXP, SEXP use_lowerSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type A(ASEXP);
+    Rcpp::traits::input_parameter< double >::type P(PSEXP);
+    Rcpp::traits::input_parameter< bool >::type use_lower(use_lowerSEXP);
+    rcpp_result_gen = Rcpp::wrap(rsample_sym(A, P, use_lower));
+    return rcpp_result_gen;
+END_RCPP
+}
 // spbin_prod
 NumericMatrix spbin_prod(IntegerVector Ai, IntegerVector Aj, NumericMatrix P);
 RcppExport SEXP _RandClust_spbin_prod(SEXP AiSEXP, SEXP AjSEXP, SEXP PSEXP) {
@@ -59,6 +72,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_RandClust_qr_Q", (DL_FUNC) &_RandClust_qr_Q, 1},
     {"_RandClust_rsample", (DL_FUNC) &_RandClust_rsample, 2},
+    {"_RandClust_rsample_sym", (DL_FUNC) &_RandClust_rsample_sym, 3},
     {"_RandClust_spbin_prod", (DL_FUNC) &_RandClust_spbin_prod, 3},
     {"_RandClust_spbin_crossprod", (DL_FUNC) &_RandClust_spbin_crossprod, 3},
     {NULL, NULL, 0}

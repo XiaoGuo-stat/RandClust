@@ -5,8 +5,44 @@ qr_Q <- function(x) {
     .Call(`_RandClust_qr_Q`, x)
 }
 
+#' Sample a sparse matrix
+#'
+#' @param A A sparse matrix of type "dgCMatrix".
+#' @param P The probability that each edge is kept.
+#'
+#' @return A binary sparse matrix of type "dgCMatrix".
+#' @examples library(Matrix)
+#' set.seed(123)
+#' n = 20
+#' A = matrix(rbinom(n^2, 1, 0.5), 20, 20)
+#' diag(A) = 0
+#' A = as(A, "dgCMatrix")
+#' A
+#' rsample(A, 0.5)
 rsample <- function(A, P) {
     .Call(`_RandClust_rsample`, A, P)
+}
+
+#' Sample a symmetric sparse matrix
+#'
+#' @param A         A sparse matrix of type "dgCMatrix". \code{A} does not need
+#'                  to be symmetric, see the parameter \code{use_lower}.
+#' @param P         The probability that each edge is kept.
+#' @param use_lower If \code{TRUE}/\code{FALSE}, only the lower/upper triangular
+#'                  part of \code{A} is used for sampling.
+#'
+#' @return A lower triangular, binary, and sparse matrix of type "dgCMatrix".
+#'         The diagonal elements are all zeros.
+#' @examples library(Matrix)
+#' set.seed(123)
+#' n = 20
+#' A = matrix(rbinom(n^2, 1, 0.5), 20, 20)
+#' A = as(A, "dgCMatrix")
+#' A
+#' rsample_sym(A, 0.5, use_lower = TRUE)
+#' rsample_sym(A, 0.5, use_lower = FALSE)
+rsample_sym <- function(A, P, use_lower = TRUE) {
+    .Call(`_RandClust_rsample_sym`, A, P, use_lower)
 }
 
 spbin_prod <- function(Ai, Aj, P) {
