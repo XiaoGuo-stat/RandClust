@@ -1,6 +1,6 @@
-#' Compute randomized eigen value decomposition of a symmetric matrix using random projection
+#' Compute randomized eigenvalue decomposition of a symmetric matrix using random projection
 #'
-#' Compute the randomized eigen value decomposition of a symmetric matrix by random projection.
+#' Compute the randomized eigenvalue decomposition of a symmetric matrix by random projection.
 #' The randomized eigen vectors and eigen values are computed. Can deal with very large
 #' data matrix.
 #'

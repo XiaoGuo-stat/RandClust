@@ -5,12 +5,12 @@
 #' data matrix.
 #'
 #' This function computes the randomized SVD of a data matrix using the random
-#' sampling scheme. The data matrix \code{A} is first sampled to obtain a sparified matrix.
+#' sampling scheme. The data matrix \code{A} is first sampled to obtain a sparsified matrix.
 #' An iterative algorithm (\code{\link[RSpectra]{svds}}) for computing the leading singular vectors is then performed on the
-#' sparsified matrix to obtain the randomzied singular vectors and singular values.
+#' sparsified matrix to obtain the randomized singular vectors and singular values.
 #'
 #'
-#' @param A Input data matrix. Not necessarily be the adjacency matrix of a network.
+#' @param A An input sparse data matrix of type "dgCMatrix". Not necessarily be the adjacency matrix of a network.
 #' @param P The sampling probability. Should be between 0 and 1.
 #' @param k Number of singular values requested. \code{k} should not be smaller than \code{nu} or \code{nv}. The default value is
 #'          \code{max(nu,nv)}.

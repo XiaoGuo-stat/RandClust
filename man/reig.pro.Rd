@@ -2,7 +2,7 @@
 % Please edit documentation in R/reig.pro.R
 \name{reig.pro}
 \alias{reig.pro}
-\title{Compute randomized eigen value decomposition of a symmetric matrix using random projection}
+\title{Compute randomized eigenvalue decomposition of a symmetric matrix using random projection}
 \usage{
 reig.pro(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE)
 }
@@ -26,7 +26,7 @@ is \code{"normal"}.}
         \item{values}{The \code{rank+p} eigen values.} \item{approA}{The approximated data matrix if requested.}
 }
 \description{
-Compute the randomized eigen value decomposition of a symmetric matrix by random projection.
+Compute the randomized eigenvalue decomposition of a symmetric matrix by random projection.
 The randomized eigen vectors and eigen values are computed. Can deal with very large
 data matrix.
 }

@@ -7,7 +7,7 @@
 rsvd.sam(A, P, k = max(nu, nv), nu, nv, tol = 1e-05, ...)
 }
 \arguments{
-\item{A}{Input data matrix. Not necessarily be the adjacency matrix of a network.}
+\item{A}{An input sparse data matrix of type "dgCMatrix". Not necessarily be the adjacency matrix of a network.}
 
 \item{P}{The sampling probability. Should be between 0 and 1.}
 
@@ -33,9 +33,9 @@ data matrix.
 }
 \details{
 This function computes the randomized SVD of a data matrix using the random
-sampling scheme. The data matrix \code{A} is first sampled to obtain a sparified matrix.
+sampling scheme. The data matrix \code{A} is first sampled to obtain a sparsified matrix.
 An iterative algorithm (\code{\link[RSpectra]{svds}}) for computing the leading singular vectors is then performed on the
-sparsified matrix to obtain the randomzied singular vectors and singular values.
+sparsified matrix to obtain the randomized singular vectors and singular values.
 }
 \examples{
 
