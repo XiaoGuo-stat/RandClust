@@ -22,7 +22,7 @@
 #' @return \item{u}{The randomized left \code{nu} singular vectors.} \item{v}{The randomized right \code{nv} singular vectors.}
 #'         \item{d}{The \code{k} leading singular values.} \item{sparA}{The sparsified data matrix obtained by \code{rsample(A,P)}.}
 #'
-#' @seealso \code{rsample}, \code{\link[RSpectra]{svds}}.
+#' @seealso \code{\link[RandClust]{rsample}}, \code{\link[RSpectra]{svds}}.
 #'
 #'
 #' @examples

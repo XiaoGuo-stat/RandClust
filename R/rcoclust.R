@@ -1,19 +1,19 @@
 
-#' Randomzied spectral co-clustering using random sampling or random projection
+#' Randomized spectral co-clustering using random sampling or random projection
 #'
 #' Randomized spectral co-clustering for directed networks. The row clusters and
 #' column clusters are computed using two random schemes, namely, the random sampling
 #' and the random projection scheme. Can deal with very large networks.
 #'
 #' This function computes the row clusters and column clusters of directed networks using
-#' randomzied spectral co-clustering algorithms. The random projection-based SVD or the
+#' randomized spectral co-clustering algorithms. The random projection-based SVD or the
 #' random sampling-based SVD is first computed for the adjacency matrix of the directed network.
-#' The k-means or the spherical k-median is then performed on the randomzied singular vectors.
+#' The k-means or the spherical k-median is then performed on the randomized singular vectors.
 #'
 #'
 #'
-#' @param A The adjacecy matrix of a directed network.
-#' @param method The method for computing the randomzied SVD. Random sampling-based SVD
+#' @param A The adjacency matrix of a directed network with type "dgCMatrix".
+#' @param method The method for computing the randomized SVD. Random sampling-based SVD
 #'               is implemented if \code{method="rsample"}, and random projection-based
 #'               SVD is implemented if \code{method="rproject"}.
 #' @param ky The number of target row clusters.
@@ -36,7 +36,7 @@
 #'                     \code{\link[Gmedian]{kGmedian}}. Default is 10.
 #' @param nstartkmeans The number of random sets in \code{\link[stats]{kmeans}} and that
 #'                     for choosing the starting point of \code{\link[Gmedian]{kGmedian}}. Default is 10.
-#' @param ... Additional auguments.
+#' @param ... Additional arguments.
 #'
 #' @return \item{cluster.y}{The row cluster vector (from \code{1:ky}) with the numbers indicating which
 #'              row cluster each node is assigned.}
@@ -57,13 +57,13 @@
 #' probmat <- matrix(0.2, ky, kz)
 #' diag(probmat) <- 0.1
 #' A <- sample_scbm(type = "scbm", cluster.y, cluster.z, probmat = probmat, graph = FALSE)
-#' rcoclust(A, method ="rsample", ky, kz, P=0.7, normalize = FALSE)
+#' rcoclust(A, method ="rsample", ky, kz, P = 0.7, normalize = FALSE)
 #' rcoclust(A, method ="rproject", ky, kz, normalize = TRUE)
 #'
 #'
 rcoclust <- function(A, method = c("rsample", "rproject"), ky, kz, p = 10, q = 2, dist = "normal", P, normalize = FALSE, iter.max = 50, nstartkmedian = 10, nstartkmeans = 10, ...){
 
-  #Compute the randomzied singular vectors
+  #Compute the randomized singular vectors
   if(method == "rsample"){
     samsvd <- rsvd.sam (A = A, P = P, nu = min(ky, kz), nv = min(ky, kz), ...)
     A.u <- samsvd$u
@@ -71,15 +71,16 @@ rcoclust <- function(A, method = c("rsample", "rproject"), ky, kz, p = 10, q = 2
   }
 
   if(method == "rproject"){
-    projsvd <- rsvd.pro (A = A, rank = min(ky, kz), p = p, q = q, dist = dist)
+    projsvd <- rsvd.pro (A = A, rank = min(ky, kz), p = p, q = q, dist = dist, ...)
     A.u <- projsvd$u[, 1 : min(ky, kz)]
     A.v <- projsvd$v[, 1 : min(ky, kz)]
   }
 
-	cluster.y <- rep(0,nrow(A))
-	cluster.z <- rep(0,nrow(A))
+
 
 	#Find the clusters using the k-means if 'normalize==FALSE' and using the spherical k-median if 'normalize==TRUE'
+  cluster.y <- rep(0, nrow(A))
+  cluster.z <- rep(0, nrow(A))
 
 	if(normalize == FALSE){
 	    fit.y <- kmeans(A.u, ky, iter.max = iter.max, nstart = nstartkmeans)

@@ -20,7 +20,7 @@
 #' @return \item{vectors}{The randomized \code{k} eigen vectors.
 #'         \item{values}{The \code{k} eigen values.} \item{sparA}{The sparsified data matrix obtained by \code{rsample_sym(A,P)}.}
 #'
-#' @seealso \code{rsample_sym}, \code{\link[RSpectra]{eigs}}.
+#' @seealso \code{\link[RandClust]{rsample_sym}}, \code{\link[RSpectra]{eigs}}.
 #'
 #'
 #' @examples

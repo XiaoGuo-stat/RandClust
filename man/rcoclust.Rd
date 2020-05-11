@@ -2,7 +2,7 @@
 % Please edit documentation in R/rcoclust.R
 \name{rcoclust}
 \alias{rcoclust}
-\title{Randomzied spectral co-clustering using random sampling or random projection}
+\title{Randomized spectral co-clustering using random sampling or random projection}
 \usage{
 rcoclust(
   A,
@@ -21,9 +21,9 @@ rcoclust(
 )
 }
 \arguments{
-\item{A}{The adjacecy matrix of a directed network.}
+\item{A}{The adjacency matrix of a directed network with type "dgCMatrix".}
 
-\item{method}{The method for computing the randomzied SVD. Random sampling-based SVD
+\item{method}{The method for computing the randomized SVD. Random sampling-based SVD
 is implemented if \code{method="rsample"}, and random projection-based
 SVD is implemented if \code{method="rproject"}.}
 
@@ -57,7 +57,7 @@ Default is 50.}
 \item{nstartkmeans}{The number of random sets in \code{\link[stats]{kmeans}} and that
 for choosing the starting point of \code{\link[Gmedian]{kGmedian}}. Default is 10.}
 
-\item{...}{Additional auguments.}
+\item{...}{Additional arguments.}
 }
 \value{
 \item{cluster.y}{The row cluster vector (from \code{1:ky}) with the numbers indicating which
@@ -76,9 +76,9 @@ and the random projection scheme. Can deal with very large networks.
 }
 \details{
 This function computes the row clusters and column clusters of directed networks using
-randomzied spectral co-clustering algorithms. The random projection-based SVD or the
+randomized spectral co-clustering algorithms. The random projection-based SVD or the
 random sampling-based SVD is first computed for the adjacency matrix of the directed network.
-The k-means or the spherical k-median is then performed on the randomzied singular vectors.
+The k-means or the spherical k-median is then performed on the randomized singular vectors.
 }
 \examples{
 n <- 120
@@ -89,7 +89,7 @@ cluster.z <- rep(1:kz, each = n/kz)
 probmat <- matrix(0.2, ky, kz)
 diag(probmat) <- 0.1
 A <- sample_scbm(type = "scbm", cluster.y, cluster.z, probmat = probmat, graph = FALSE)
-rcoclust(A, method ="rsample", ky, kz, P=0.7, normalize = FALSE)
+rcoclust(A, method ="rsample", ky, kz, P = 0.7, normalize = FALSE)
 rcoclust(A, method ="rproject", ky, kz, normalize = TRUE)
 
 

@@ -55,5 +55,5 @@ rsvd.sam(A, P = 0.7, nu = rank, nv = rank)
 
 }
 \seealso{
-\code{rsample}, \code{\link[RSpectra]{svds}}.
+\code{\link[RandClust]{rsample}}, \code{\link[RSpectra]{svds}}.
 }
