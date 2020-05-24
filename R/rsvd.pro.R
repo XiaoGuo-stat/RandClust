@@ -48,25 +48,25 @@
 #' @export rsvd.pro
 #'
 #'
-rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE){
+rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE) {
+    # Get coordinates of nonzero elements
+    n <- nrow(A)
+    Acoord <- as(A, "dgTMatrix")
+    Ai <- Acoord@i
+    Aj <- Acoord@j
 
-  n <- nrow(A)
-	Acoord <- as(A, "dgTMatrix")
-	Ai <- Acoord@i
-	Aj <- Acoord@j
-
-    #The approximation for the column space
-    #Set the reduced dimension for the column space
-
+    # The approximation for the column space
+    # Set the reduced dimension for the column space
     ly <- round(rank) + round(p)
 
-    #Generate a random test matrix Oy
-
+    # Generate a random test matrix Oy
+    zsetseed(sample(2147483647L, 1))
+    pre_alloc <- matrix(0, n, ly)
     Oy <- switch(dist,
-                normal = matrix(zrnormR(ly*n), n, ly),
-                unif = matrix(runif(ly*n), n, ly),
-                rademacher = matrix(sample(c(-1,1), (ly*n), replace = TRUE, prob = c(0.5,0.5)), n, ly),
-                stop("The sampling distribution is not supported!"))
+                 normal = zrnormVec(pre_alloc),
+                 unif = matrix(dqrunif(ly*n), n, ly),
+                 rademacher = matrix(sample(c(-1,1), (ly*n), replace = TRUE, prob = c(0.5,0.5)), n, ly),
+                 stop("The sampling distribution is not supported!"))
 
     #Build the sketch matrix Y : Y = A * Oy
 
@@ -93,14 +93,12 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE){
 
     lz <- round(rank) + round(p)
 
-
-    #Generate a random test matrix Oz
-
+    # Generate a random test matrix Oz
     Oz <- switch(dist,
-                normal = matrix(zrnormR(lz*n), n, lz),
-                unif = matrix(runif(lz*n), n, lz),
-                rademacher = matrix(sample(c(-1,1), (lz*n), replace = TRUE, prob = c(0.5,0.5)), n, lz),
-                stop("The sampling distribution is not supported!"))
+                 normal = zrnormVec(pre_alloc),
+                 unif = matrix(dqrunif(lz*n), n, lz),
+                 rademacher = matrix(sample(c(-1,1), (lz*n), replace = TRUE, prob = c(0.5,0.5)), n, lz),
+                 stop("The sampling distribution is not supported!"))
 
 
     #Build sketch matrix Y : Y = A' * Oz

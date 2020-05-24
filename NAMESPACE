@@ -1,6 +1,6 @@
 exportPattern("^[[:alpha:]]+")
 importFrom(Rcpp, evalCpp)
-importFrom(RcppZiggurat, zrnormR)
+importFrom(RcppZiggurat, zsetseed, zrnormVec, zrnormR)
 importFrom(stats, runif)
 importFrom(RSpectra, svds, eigs_sym)
 importFrom(Gmedian, kGmedian)
