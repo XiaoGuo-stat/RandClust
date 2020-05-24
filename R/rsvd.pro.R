@@ -48,7 +48,7 @@
 #' @export rsvd.pro
 #'
 #'
-rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE) {
+rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE, nthread = 1) {
     # Get coordinates of nonzero elements
     n <- nrow(A)
     Acoord <- as(A, "dgTMatrix")
@@ -69,10 +69,7 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE) {
                  stop("The sampling distribution is not supported!"))
 
     # Build the sketch matrix Y : Y = (A * A')^q * A * Oy
-    Y <- spbin_power_prod(Ai, Aj, Oy, q)
-
-    # Orthogonalize Y using QR decomposition: Y=QR
-    Q <- qr_Q(Y)
+    Y <- spbin_power_prod(Ai, Aj, Oy, q, nthread)
 
     # The approximation for the row space
     # Set the reduced dimension for the row space
@@ -85,11 +82,18 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE) {
                  rademacher = matrix(sample(c(-1,1), (lz*n), replace = TRUE, prob = c(0.5,0.5)), n, lz),
                  stop("The sampling distribution is not supported!"))
 
-    # Build sketch matrix Y : Y = (A' * A)^q * A' * Oz
-    Y <- spbin_power_crossprod(Ai, Aj, Oz, q)
+    # Build sketch matrix Z : Z = (A' * A)^q * A' * Oz
+    Z <- spbin_power_crossprod(Ai, Aj, Oz, q, nthread)
 
-    # Orthogonalize Y using QR decomposition: Y=QR
-    T <- qr_Q(Y)
+    # Orthogonalize Y using QR decomposition: Y = Q * R1
+    # Q <- qr_Q(Y)
+    # Orthogonalize Z using QR decomposition: Z = T * R2
+    # T <- qr_Q(Z)
+    #
+    # Compute two QR decompositions in parallel
+    QT <- qr_Q2(Y, Z, nthread)
+    Q <- QT[[1]]
+    T <- QT[[2]]
 
     # Obtain the smaller matrix B := Q' * A * T
     B <- crossprod(Q , spbin_power_prod(Ai, Aj, T, 0))
