@@ -7,9 +7,10 @@ using Rcpp::IntegerVector;
 // res = A * P, A[n x n], P[n x k]
 // A is a binary sparse matrix with nonzero elements given by coordinates (Ai, Aj)
 void spbin_prod(const int* Ai, const int* Aj, const int nnz,
-                const double* P, const int n, const int k, double* res)
+                const double* P, const int n, const int k,
+                double* res, const int nthread = 1)
 {
-    #pragma omp parallel for shared(Ai, Aj, P, res)
+    #pragma omp parallel for shared(Ai, Aj, P, res) num_threads(nthread)
     for(int j = 0; j < k; j++)
     {
         const double* v_ptr = P + j * n;
@@ -24,9 +25,10 @@ void spbin_prod(const int* Ai, const int* Aj, const int nnz,
 // res = A' * P, A[n x n], P[n x k]
 // A is a binary sparse matrix with nonzero elements given by coordinates (Ai, Aj)
 void spbin_crossprod(const int* Ai, const int* Aj, const int nnz,
-                     const double* P, const int n, const int k, double* res)
+                     const double* P, const int n, const int k,
+                     double* res, const int nthread = 1)
 {
-    #pragma omp parallel for shared(Ai, Aj, P, res)
+    #pragma omp parallel for shared(Ai, Aj, P, res) num_threads(nthread)
     for(int j = 0; j < k; j++)
     {
         const double* v_ptr = P + j * n;
@@ -42,7 +44,7 @@ void spbin_crossprod(const int* Ai, const int* Aj, const int nnz,
 
 // res = (AA')^q AP
 // [[Rcpp::export]]
-NumericMatrix spbin_power_prod(IntegerVector Ai, IntegerVector Aj, NumericMatrix P, int q)
+NumericMatrix spbin_power_prod(IntegerVector Ai, IntegerVector Aj, NumericMatrix P, int q, int nthread = 1)
 {
     const int n = P.nrow();
     const int k = P.ncol();
@@ -51,7 +53,7 @@ NumericMatrix spbin_power_prod(IntegerVector Ai, IntegerVector Aj, NumericMatrix
     NumericMatrix res(n, k);
 
     // res = AP
-    spbin_prod(Ai.begin(), Aj.begin(), nnz, P.begin(), n, k, res.begin());
+    spbin_prod(Ai.begin(), Aj.begin(), nnz, P.begin(), n, k, res.begin(), nthread);
 
     // Allocate workspace if needed
     double* work = NULL;
@@ -61,8 +63,8 @@ NumericMatrix spbin_power_prod(IntegerVector Ai, IntegerVector Aj, NumericMatrix
     // Power iterations
     for(int i = 0; i < q; i++)
     {
-        spbin_crossprod(Ai.begin(), Aj.begin(), nnz, res.begin(), n, k, work);
-        spbin_prod(Ai.begin(), Aj.begin(), nnz, work, n, k, res.begin());
+        spbin_crossprod(Ai.begin(), Aj.begin(), nnz, res.begin(), n, k, work, nthread);
+        spbin_prod(Ai.begin(), Aj.begin(), nnz, work, n, k, res.begin(), nthread);
     }
 
     // Free workspace
@@ -74,7 +76,7 @@ NumericMatrix spbin_power_prod(IntegerVector Ai, IntegerVector Aj, NumericMatrix
 
 // res = (A'A)^q A'P
 // [[Rcpp::export]]
-NumericMatrix spbin_power_crossprod(IntegerVector Ai, IntegerVector Aj, NumericMatrix P, int q)
+NumericMatrix spbin_power_crossprod(IntegerVector Ai, IntegerVector Aj, NumericMatrix P, int q, int nthread = 1)
 {
     const int n = P.nrow();
     const int k = P.ncol();
@@ -83,7 +85,7 @@ NumericMatrix spbin_power_crossprod(IntegerVector Ai, IntegerVector Aj, NumericM
     NumericMatrix res(n, k);
 
     // res = A'P
-    spbin_crossprod(Ai.begin(), Aj.begin(), nnz, P.begin(), n, k, res.begin());
+    spbin_crossprod(Ai.begin(), Aj.begin(), nnz, P.begin(), n, k, res.begin(), nthread);
 
     // Allocate workspace if needed
     double* work = NULL;
@@ -93,8 +95,8 @@ NumericMatrix spbin_power_crossprod(IntegerVector Ai, IntegerVector Aj, NumericM
     // Power iterations
     for(int i = 0; i < q; i++)
     {
-        spbin_prod(Ai.begin(), Aj.begin(), nnz, res.begin(), n, k, work);
-        spbin_crossprod(Ai.begin(), Aj.begin(), nnz, work, n, k, res.begin());
+        spbin_prod(Ai.begin(), Aj.begin(), nnz, res.begin(), n, k, work, nthread);
+        spbin_crossprod(Ai.begin(), Aj.begin(), nnz, work, n, k, res.begin(), nthread);
     }
 
     // Free workspace
