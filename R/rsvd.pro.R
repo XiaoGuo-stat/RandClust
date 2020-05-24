@@ -68,29 +68,14 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE) {
                  rademacher = matrix(sample(c(-1,1), (ly*n), replace = TRUE, prob = c(0.5,0.5)), n, ly),
                  stop("The sampling distribution is not supported!"))
 
-    #Build the sketch matrix Y : Y = A * Oy
+    # Build the sketch matrix Y : Y = (A * A')^q * A * Oy
+    Y <- spbin_power_prod(Ai, Aj, Oy, q)
 
-	  Y <- spbin_prod(Ai, Aj, Oy)
-    remove(Oy)
-
-    #Orthogonalize Y using QR decomposition: Y=QR
-
-    if( q > 0 ) {
-        for( i in 1:q) {
-            Y <- qr_Q(Y)
-            Z <- spbin_crossprod(Ai, Aj, Y)
-            Z <- qr_Q(Z)
-            Y <- spbin_prod(Ai, Aj, Z)
-        }
-        remove(Z)
-    }
-
+    # Orthogonalize Y using QR decomposition: Y=QR
     Q <- qr_Q(Y)
-    remove(Y)
 
-    #The approximation for the row space
-    #Set the reduced dimension for the row space
-
+    # The approximation for the row space
+    # Set the reduced dimension for the row space
     lz <- round(rank) + round(p)
 
     # Generate a random test matrix Oz
@@ -100,55 +85,27 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE) {
                  rademacher = matrix(sample(c(-1,1), (lz*n), replace = TRUE, prob = c(0.5,0.5)), n, lz),
                  stop("The sampling distribution is not supported!"))
 
+    # Build sketch matrix Y : Y = (A' * A)^q * A' * Oz
+    Y <- spbin_power_crossprod(Ai, Aj, Oz, q)
 
-    #Build sketch matrix Y : Y = A' * Oz
-
-	  Y <- spbin_crossprod(Ai, Aj, Oz)
-    remove(Oz)
-
-
-    #Orthogonalize Y using QR decomposition: Y=QR
-
-    if( q > 0 ) {
-        for( i in 1:q) {
-            Y <- qr_Q(Y)
-            Z <- spbin_prod(Ai, Aj, Y)
-            Z <- qr_Q(Z)
-            Y <- spbin_crossprod(Ai, Aj, Z)
-        }
-        remove(Z)
-    }
-
+    # Orthogonalize Y using QR decomposition: Y=QR
     T <- qr_Q(Y)
-    remove(Y)
 
+    # Obtain the smaller matrix B := Q' * A * T
+    B <- crossprod(Q , spbin_power_prod(Ai, Aj, T, 0))
 
-
-
-    #Obtain the smaller matrix B := Q' * A * T
-
-    B <- crossprod(Q , spbin_prod(Ai, Aj, T))
-
-    #Compute the SVD of B and recover the approximated singular vectors of A
+    # Compute the SVD of B and recover the approximated singular vectors of A
     fit <- svd(B)
     u <- Q %*% fit$u
     v <- T %*% fit$v
     d <- fit$d
 
-
-
-   #Output the result
-
-   if(approA == FALSE){
-      list(u = u, v = v, d = d)
-   }
-	 else{
-
-	 #Compute the approximated matrix of the original A
-
-	    C  <- Q %*% B %*% t(T)
-	    list(u = u, v = v, d = d, approA = C)
-	 }
-
-
+    # Output the result
+    if(approA == FALSE) {
+        list(u = u, v = v, d = d)
+    } else {
+        # Compute the approximated matrix of the original A
+        C  <- Q %*% B %*% t(T)
+        list(u = u, v = v, d = d, approA = C)
+    }
 }
