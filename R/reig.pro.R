@@ -70,7 +70,7 @@ reig.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE){
 
     #Build sketch matrix Y : Y = A * O
 
-	  Y <- spbin_prod(Ai, Aj, O)
+	  Y <- spbin_power_prod(Ai, Aj, O, q = 0)
     remove(O)
 
     #Orthogonalize Y using QR decomposition: Y=QR
@@ -78,9 +78,9 @@ reig.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE){
     if( q > 0 ) {
         for( i in 1:q) {
             Y <- qr_Q(Y)
-            Z <- spbin_crossprod(Ai, Aj, Y)
+            Z <- spbin_power_crossprod(Ai, Aj, Y, q = 0)
             Z <- qr_Q(Z)
-            Y <- spbin_prod(Ai, Aj, Z)
+            Y <- spbin_power_prod(Ai, Aj, Z, q = 0)
         }
         remove(Z)
     }
@@ -91,7 +91,7 @@ reig.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE){
 
     #Obtain the smaller matrix B := Q' * A * Q
 
-	  B <- crossprod(Q, spbin_prod(Ai, Aj, Q))
+	  B <- crossprod(Q, spbin_power_prod(Ai, Aj, Q, q = 0))
 
 	  #Compute the eigenvalue decomposition of B and recover the approximated singular vectors of A
 

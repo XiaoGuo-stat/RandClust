@@ -44,7 +44,7 @@ void spbin_crossprod(const int* Ai, const int* Aj, const int nnz,
 
 // res = (AA')^q AP
 // [[Rcpp::export]]
-NumericMatrix spbin_power_prod(IntegerVector Ai, IntegerVector Aj, NumericMatrix P, int q, int nthread = 1)
+NumericMatrix spbin_power_prod(IntegerVector Ai, IntegerVector Aj, NumericMatrix P, int q = 0, int nthread = 1)
 {
     const int n = P.nrow();
     const int k = P.ncol();
@@ -76,7 +76,7 @@ NumericMatrix spbin_power_prod(IntegerVector Ai, IntegerVector Aj, NumericMatrix
 
 // res = (A'A)^q A'P
 // [[Rcpp::export]]
-NumericMatrix spbin_power_crossprod(IntegerVector Ai, IntegerVector Aj, NumericMatrix P, int q, int nthread = 1)
+NumericMatrix spbin_power_crossprod(IntegerVector Ai, IntegerVector Aj, NumericMatrix P, int q = 0, int nthread = 1)
 {
     const int n = P.nrow();
     const int k = P.ncol();
