@@ -6,6 +6,7 @@ using Rcpp::IntegerVector;
 
 // res = A * P, A[n x n], P[n x k]
 // A is a binary sparse matrix with nonzero elements given by coordinates (Ai, Aj)
+// res needs to be initialized to 0
 void spbin_prod(const int* Ai, const int* Aj, const int nnz,
                 const double* P, const int n, const int k,
                 double* res, const int nthread = 1)
@@ -24,6 +25,7 @@ void spbin_prod(const int* Ai, const int* Aj, const int nnz,
 
 // res = A' * P, A[n x n], P[n x k]
 // A is a binary sparse matrix with nonzero elements given by coordinates (Ai, Aj)
+// res needs to be initialized to 0
 void spbin_crossprod(const int* Ai, const int* Aj, const int nnz,
                      const double* P, const int n, const int k,
                      double* res, const int nthread = 1)
@@ -58,12 +60,16 @@ NumericMatrix spbin_power_prod(IntegerVector Ai, IntegerVector Aj, NumericMatrix
     // Allocate workspace if needed
     double* work = NULL;
     if(q > 0)
+    {
         work = new double[n * k];
+    }
 
     // Power iterations
     for(int i = 0; i < q; i++)
     {
+        std::fill(work, work + n * k, 0.0);
         spbin_crossprod(Ai.begin(), Aj.begin(), nnz, res.begin(), n, k, work, nthread);
+        std::fill(res.begin(), res.end(), 0.0);
         spbin_prod(Ai.begin(), Aj.begin(), nnz, work, n, k, res.begin(), nthread);
     }
 
@@ -90,12 +96,16 @@ NumericMatrix spbin_power_crossprod(IntegerVector Ai, IntegerVector Aj, NumericM
     // Allocate workspace if needed
     double* work = NULL;
     if(q > 0)
+    {
         work = new double[n * k];
+    }
 
     // Power iterations
     for(int i = 0; i < q; i++)
     {
+        std::fill(work, work + n * k, 0.0);
         spbin_prod(Ai.begin(), Aj.begin(), nnz, res.begin(), n, k, work, nthread);
+        std::fill(res.begin(), res.end(), 0.0);
         spbin_crossprod(Ai.begin(), Aj.begin(), nnz, work, n, k, res.begin(), nthread);
     }
 
