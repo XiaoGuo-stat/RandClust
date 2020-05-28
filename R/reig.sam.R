@@ -46,7 +46,7 @@ reig.sam <- function(A, P, use_lower = TRUE, k, tol = 1e-5, ...){
   rA <- rsample_sym (A, P, use_lower = use_lower)
 
   #Find the leading eigen vectors of the sparsified matrix
-  partialeig <- eigs_sym (rA, k = k, tol = tol, ...)
+  partialeig <- eigs_sym (rA, k = k, opts = list(tol = tol), ...)
   vectors <- partialeig$vectors
   values <- partialeig$values
 
