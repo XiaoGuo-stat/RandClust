@@ -51,12 +51,21 @@ public:
     // res = A' * v
     void tprod(const double* v, double* res) const
     {
-        std::fill(res, res + m_n, 0.0);
-        const int* Ai = &m_Ai[0];
-        const int* Ai_end = Ai + m_nnz;
-        const int* Aj = &m_Aj[0];
-        for(; Ai < Ai_end; Ai++, Aj++)
-            res[*Aj] += v[*Ai];
+        const int* inner = m_sp.innerIndexPtr();
+        const int* outer = m_sp.outerIndexPtr();
+        for(int c = 0; c < m_n; c++)
+        {
+            const int Aj = c;
+            const int* Ai_ptr = inner + outer[c];
+            const int* Ai_end = inner + outer[c + 1];
+            double r = 0.0;
+            for(; Ai_ptr < Ai_end; Ai_ptr++)
+            {
+                const int Ai = *Ai_ptr;
+                r += v[Ai];
+            }
+            res[Aj] = r;
+        }
     }
 };
 
