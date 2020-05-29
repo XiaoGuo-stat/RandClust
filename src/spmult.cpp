@@ -4,6 +4,41 @@ using Rcpp::List;
 using Rcpp::NumericMatrix;
 using Rcpp::IntegerVector;
 
+#ifdef __AVX2__
+#include <immintrin.h>
+inline double gather_sum(const double* val, const int* idx_start, int n)
+{
+    constexpr int simd_size = 4;
+    const int* idx_simd_end = idx_start + (n - n % simd_size);
+    const int* idx_end = idx_start + n;
+
+    __m256d resv = _mm256_set1_pd(0.0);
+    for(; idx_start < idx_simd_end; idx_start += simd_size)
+    {
+        __m128i idx = _mm_loadu_si128((__m128i*) idx_start);
+        __m256d v = _mm256_i32gather_pd(val, idx, sizeof(double));
+        resv += v;
+    }
+
+    double res = 0.0;
+    for(; idx_start < idx_end; idx_start++)
+        res += val[*idx_start];
+
+    return res + resv[0] + resv[1] + resv[2] + resv[3];
+}
+#else
+inline double gather_sum(const double* val, const int* idx_start, int n)
+{
+    double res = 0.0;
+    const int* idx_end = idx_start + n;
+    for(; idx_start < idx_end; idx_start++)
+        res += val[*idx_start];
+    return res;
+}
+#endif
+
+
+
 // Binary sparse matrix
 class BinSpMat
 {
@@ -15,37 +50,31 @@ private:
     const MapSpMat m_sp;
     const int m_n;
     const int m_nnz;
-    Coords m_Ai;
-    Coords m_Aj;
 
 public:
     // mat is a binary sparse matrix of class dgCMatrix
     BinSpMat(Rcpp::S4 mat) :
         m_sp(Rcpp::as<MapSpMat>(mat)),
-        m_n(m_sp.rows()), m_nnz(m_sp.nonZeros()),
-        m_Ai(m_nnz), m_Aj(m_nnz)
-    {
-        int i = 0;
-        const int n = m_sp.cols();
-        for(int k = 0; k < n; k++)
-        {
-            for(MapSpMat::InnerIterator it(m_sp, k); it; ++it, ++i)
-            {
-                m_Ai[i] = it.row();
-                m_Aj[i] = k;
-            }
-        }
-    }
+        m_n(m_sp.rows()), m_nnz(m_sp.nonZeros())
+    {}
 
     // res = A * v
     void prod(const double* v, double* res) const
     {
         std::fill(res, res + m_n, 0.0);
-        const int* Ai = &m_Ai[0];
-        const int* Ai_end = Ai + m_nnz;
-        const int* Aj = &m_Aj[0];
-        for(; Ai < Ai_end; Ai++, Aj++)
-            res[*Ai] += v[*Aj];
+
+        const int* inner = m_sp.innerIndexPtr();
+        const int* outer = m_sp.outerIndexPtr();
+        for(int j = 0; j < m_n; j++)
+        {
+            const int* Ai_start = inner + outer[j];
+            const int* Ai_end = inner + outer[j + 1];
+            const double rhs = v[j];
+            for(; Ai_start < Ai_end; Ai_start++)
+            {
+                res[*Ai_start] += rhs;
+            }
+        }
     }
 
     // res = A' * v
@@ -53,18 +82,10 @@ public:
     {
         const int* inner = m_sp.innerIndexPtr();
         const int* outer = m_sp.outerIndexPtr();
-        for(int c = 0; c < m_n; c++)
+        for(int j = 0; j < m_n; j++)
         {
-            const int Aj = c;
-            const int* Ai_ptr = inner + outer[c];
-            const int* Ai_end = inner + outer[c + 1];
-            double r = 0.0;
-            for(; Ai_ptr < Ai_end; Ai_ptr++)
-            {
-                const int Ai = *Ai_ptr;
-                r += v[Ai];
-            }
-            res[Aj] = r;
+            const int* Ai_start = inner + outer[j];
+            res[j] = gather_sum(v, Ai_start, outer[j + 1] - outer[j]);
         }
     }
 };
