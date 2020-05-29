@@ -1,117 +1,148 @@
-#include <Rcpp.h>
+#include <RcppEigen.h>
 
 using Rcpp::List;
 using Rcpp::NumericMatrix;
 using Rcpp::IntegerVector;
 
-// res = A * P, A[n x n], P[n x k]
-// A is a binary sparse matrix with nonzero elements given by coordinates (Ai, Aj)
-// res needs to be initialized to 0
-void spbin_prod(const int* Ai, const int* Aj, const int nnz,
-                const double* P, const int n, const int k,
-                double* res, const int nthread = 1)
+// Binary sparse matrix
+class BinSpMat
 {
-    #pragma omp parallel for shared(Ai, Aj, P, res) num_threads(nthread)
-    for(int j = 0; j < k; j++)
+private:
+    using SpMat = Eigen::SparseMatrix<double>;
+    using MapSpMat = Eigen::Map<SpMat>;
+    using Coords = std::vector<int>;
+
+    const MapSpMat m_sp;
+    const int m_n;
+    const int m_nnz;
+    Coords m_Ai;
+    Coords m_Aj;
+
+public:
+    // mat is a binary sparse matrix of class dgCMatrix
+    BinSpMat(Rcpp::S4 mat) :
+        m_sp(Rcpp::as<MapSpMat>(mat)),
+        m_n(m_sp.rows()), m_nnz(m_sp.nonZeros()),
+        m_Ai(m_nnz), m_Aj(m_nnz)
     {
-        const double* v_ptr = P + j * n;
-        double* col_ptr = res + j * n;
-        for(int l = 0; l < nnz; l++)
+        int i = 0;
+        const int n = m_sp.cols();
+        for(int k = 0; k < n; k++)
         {
-            col_ptr[Ai[l]] += v_ptr[Aj[l]];
+            for(MapSpMat::InnerIterator it(m_sp, k); it; ++it, ++i)
+            {
+                m_Ai[i] = it.row();
+                m_Aj[i] = k;
+            }
         }
     }
-}
 
-// res = A' * P, A[n x n], P[n x k]
-// A is a binary sparse matrix with nonzero elements given by coordinates (Ai, Aj)
-// res needs to be initialized to 0
-void spbin_crossprod(const int* Ai, const int* Aj, const int nnz,
-                     const double* P, const int n, const int k,
-                     double* res, const int nthread = 1)
-{
-    #pragma omp parallel for shared(Ai, Aj, P, res) num_threads(nthread)
-    for(int j = 0; j < k; j++)
+    // res = A * v
+    void prod(const double* v, double* res) const
     {
-        const double* v_ptr = P + j * n;
-        double* col_ptr = res + j * n;
-        for(int l = 0; l < nnz; l++)
-        {
-            col_ptr[Aj[l]] += v_ptr[Ai[l]];
-        }
+        std::fill(res, res + m_n, 0.0);
+        const int* Ai = &m_Ai[0];
+        const int* Ai_end = Ai + m_nnz;
+        const int* Aj = &m_Aj[0];
+        for(; Ai < Ai_end; Ai++, Aj++)
+            res[*Ai] += v[*Aj];
     }
+
+    // res = A' * v
+    void tprod(const double* v, double* res) const
+    {
+        std::fill(res, res + m_n, 0.0);
+        const int* Ai = &m_Ai[0];
+        const int* Ai_end = Ai + m_nnz;
+        const int* Aj = &m_Aj[0];
+        for(; Ai < Ai_end; Ai++, Aj++)
+            res[*Aj] += v[*Ai];
+    }
+};
+
+
+
+// [[Rcpp::export]]
+SEXP sparse_matrix_coords(Rcpp::S4 mat)
+{
+    BinSpMat* sp = new BinSpMat(mat);
+    return Rcpp::XPtr<BinSpMat>(sp, true);
 }
-
-
 
 // res = (AA')^q AP
 // [[Rcpp::export]]
-NumericMatrix spbin_power_prod(IntegerVector Ai, IntegerVector Aj, NumericMatrix P, int q = 0, int nthread = 1)
+NumericMatrix spbin_power_prod(SEXP coords, NumericMatrix P, int q = 0, int nthread = 1)
 {
+    Rcpp::XPtr<BinSpMat> sp(coords);
     const int n = P.nrow();
     const int k = P.ncol();
-    const int nnz = Ai.length();
+    NumericMatrix res(Rcpp::no_init_matrix(n, k));
+    const double* P_ptr = P.begin();
+    double* res_ptr = res.begin();
 
-    NumericMatrix res(n, k);
-
-    // res = AP
-    spbin_prod(Ai.begin(), Aj.begin(), nnz, P.begin(), n, k, res.begin(), nthread);
-
-    // Allocate workspace if needed
-    double* work = NULL;
-    if(q > 0)
+    #pragma omp parallel for shared(P_ptr, res_ptr, sp) num_threads(nthread)
+    for(int j = 0; j < k; j++)
     {
-        work = new double[n * k];
-    }
+        const double* v = P_ptr + j * n;
+        double* r = res_ptr + j * n;
+        // res = AP
+        sp->prod(v, r);
 
-    // Power iterations
-    for(int i = 0; i < q; i++)
-    {
-        std::fill(work, work + n * k, 0.0);
-        spbin_crossprod(Ai.begin(), Aj.begin(), nnz, res.begin(), n, k, work, nthread);
-        std::fill(res.begin(), res.end(), 0.0);
-        spbin_prod(Ai.begin(), Aj.begin(), nnz, work, n, k, res.begin(), nthread);
-    }
+        // Allocate workspace if needed
+        double* work = NULL;
+        if(q > 0)
+            work = new double[n];
 
-    // Free workspace
-    if(q > 0)
-        delete[] work;
+        // Power iterations
+        for(int i = 0; i < q; i++)
+        {
+            sp->tprod(r, work);
+            sp->prod(work, r);
+        }
+
+        // Free workspace
+        if(q > 0)
+            delete[] work;
+    }
 
     return res;
 }
 
 // res = (A'A)^q A'P
 // [[Rcpp::export]]
-NumericMatrix spbin_power_crossprod(IntegerVector Ai, IntegerVector Aj, NumericMatrix P, int q = 0, int nthread = 1)
+NumericMatrix spbin_power_crossprod(SEXP coords, NumericMatrix P, int q = 0, int nthread = 1)
 {
+    Rcpp::XPtr<BinSpMat> sp(coords);
     const int n = P.nrow();
     const int k = P.ncol();
-    const int nnz = Ai.length();
+    NumericMatrix res(Rcpp::no_init_matrix(n, k));
+    const double* P_ptr = P.begin();
+    double* res_ptr = res.begin();
 
-    NumericMatrix res(n, k);
-
-    // res = A'P
-    spbin_crossprod(Ai.begin(), Aj.begin(), nnz, P.begin(), n, k, res.begin(), nthread);
-
-    // Allocate workspace if needed
-    double* work = NULL;
-    if(q > 0)
+    #pragma omp parallel for shared(P_ptr, res_ptr, sp) num_threads(nthread)
+    for(int j = 0; j < k; j++)
     {
-        work = new double[n * k];
-    }
+        const double* v = P_ptr + j * n;
+        double* r = res_ptr + j * n;
+        // res = A'P
+        sp->tprod(v, r);
 
-    // Power iterations
-    for(int i = 0; i < q; i++)
-    {
-        std::fill(work, work + n * k, 0.0);
-        spbin_prod(Ai.begin(), Aj.begin(), nnz, res.begin(), n, k, work, nthread);
-        std::fill(res.begin(), res.end(), 0.0);
-        spbin_crossprod(Ai.begin(), Aj.begin(), nnz, work, n, k, res.begin(), nthread);
-    }
+        // Allocate workspace if needed
+        double* work = NULL;
+        if(q > 0)
+            work = new double[n];
 
-    // Free workspace
-    if(q > 0)
-        delete[] work;
+        // Power iterations
+        for(int i = 0; i < q; i++)
+        {
+            sp->prod(r, work);
+            sp->tprod(work, r);
+        }
+
+        // Free workspace
+        if(q > 0)
+            delete[] work;
+    }
 
     return res;
 }
