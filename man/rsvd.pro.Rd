@@ -4,10 +4,10 @@
 \alias{rsvd.pro}
 \title{Compute randomized SVD of a matrix using random projection}
 \usage{
-rsvd.pro(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE)
+rsvd.pro(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE, nthread = 1)
 }
 \arguments{
-\item{A}{Input data matrix. Not necessarily be the adjacency matrix of a network.}
+\item{A}{Input data matrix of class "\code{dgCMatrix}". Not necessarily be the adjacency matrix of a network.}
 
 \item{rank}{The target rank of the low-rank decomposition.}
 
@@ -39,17 +39,19 @@ matrix. The randomized SVD of \code{A} are obtained by postprocessing.
 }
 \examples{
 
+library(Matrix)
 n <- 100
 rank <- 2
 clustertrue.y <- rep(1:rank, each = n/rank)
 clustertrue.z <- rep(1:rank, each = n/rank)
 A <- matrix(0, n, n)
-for(i in 1:n){
-     for(j in 1:n){
-        A[i,j]<-ifelse(clustertrue.y[i] == clustertrue.z[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
+for(i in 1:n) {
+     for(j in 1:n) {
+        A[i, j] <- ifelse(clustertrue.y[i] == clustertrue.z[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
     }
 }
-diag(A)<-0
+diag(A) <- 0
+A <- as(A, "dgCMatrix")
 rsvd.pro(A, rank)
 
 }

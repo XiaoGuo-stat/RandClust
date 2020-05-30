@@ -7,7 +7,7 @@
 reig.pro(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE)
 }
 \arguments{
-\item{A}{Input data matrix. The matrix should be a symmetric matrix but not necessarily be the adjacency matrix of a network.}
+\item{A}{Input data matrix of class "\code{dgCMatrix}". The matrix should be a symmetric matrix but not necessarily be the adjacency matrix of a network.}
 
 \item{rank}{The target rank of the low-rank decomposition.}
 
@@ -43,12 +43,14 @@ n <- 100
 rank <- 2
 clustertrue <- rep(1:rank, each = n/rank)
 A <- matrix(0, n, n)
-for(i in 1:n){
-     for(j in 1:n){
-        A[i,j]<-ifelse(clustertrue[i] == clustertrue[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
+for(i in 1:(n - 1)) {
+    for(j in (i + 1):n) {
+        A[i, j] <- ifelse(clustertrue[i] == clustertrue[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
     }
 }
-diag(A)<-0
+diag(A) <- 0
+A <- A + t(A)
+A <- as(A, "dgCMatrix")
 reig.pro(A, rank)
 
 }

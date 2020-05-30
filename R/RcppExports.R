@@ -5,6 +5,10 @@ qr_Q <- function(x) {
     .Call(`_RandClust_qr_Q`, x)
 }
 
+qr_Q2 <- function(x1, x2, nthread = 2L) {
+    .Call(`_RandClust_qr_Q2`, x1, x2, nthread)
+}
+
 #' Sample a sparse matrix
 #'
 #' @param A A sparse matrix of type "dgCMatrix".
@@ -45,11 +49,15 @@ rsample_sym <- function(A, P, use_lower = TRUE) {
     .Call(`_RandClust_rsample_sym`, A, P, use_lower)
 }
 
-spbin_prod <- function(Ai, Aj, P) {
-    .Call(`_RandClust_spbin_prod`, Ai, Aj, P)
+sparse_matrix_coords <- function(mat, nthread = 1L) {
+    .Call(`_RandClust_sparse_matrix_coords`, mat, nthread)
 }
 
-spbin_crossprod <- function(Ai, Aj, P) {
-    .Call(`_RandClust_spbin_crossprod`, Ai, Aj, P)
+spbin_power_prod <- function(coords, P, q = 0L, nthread = 1L) {
+    .Call(`_RandClust_spbin_power_prod`, coords, P, q, nthread)
+}
+
+spbin_power_crossprod <- function(coords, P, q = 0L, nthread = 1L) {
+    .Call(`_RandClust_spbin_power_crossprod`, coords, P, q, nthread)
 }
 
