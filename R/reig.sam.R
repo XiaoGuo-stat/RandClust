@@ -17,8 +17,9 @@
 #' @param tol Precision parameter of the iterative algorithm. Default is 1e-5.
 #' @param ... Additional arguments of function \code{\link[RSpectra]{eigs}}.
 
-#' @return \item{vectors}{The randomized \code{k} eigen vectors.
-#'         \item{values}{The \code{k} eigen values.} \item{sparA}{The sparsified data matrix obtained by \code{rsample_sym(A,P)}.}
+#' @return \item{vectors}{The randomized \code{k} eigen vectors.}
+#'         \item{values}{The \code{k} eigen values.}
+#'         \item{sparA}{The sparsified data matrix obtained by \code{rsample_sym(A,P)}.}
 #'
 #' @seealso \code{\link[RandClust]{rsample_sym}}, \code{\link[RSpectra]{eigs}}.
 #'
@@ -29,14 +30,14 @@
 #' k <- 2
 #' clustertrue <- rep(1:k, each = n/k)
 #' A <- matrix(0, n, n)
-#' for(i in 1:n){
-#'      for(j in 1:n){
-#'         A[i,j]<-ifelse(clustertrue[i] == clustertrue[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
+#' for(i in 1:n) {
+#'     for(j in 1:n) {
+#'         A[i, j] <- ifelse(clustertrue[i] == clustertrue[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
 #'     }
 #' }
 #' diag(A) <- 0
 #' A <- as(A, "dgCMatrix")
-#' reig.sam(A, P = 0.7, k=k)
+#' reig.sam(A, P = 0.7, use_lower = TRUE, k = k)
 #'
 #' @export reig.sam
 #'

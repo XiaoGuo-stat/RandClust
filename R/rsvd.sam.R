@@ -32,9 +32,9 @@
 #' clustertrue.y <- rep(1:rank, each = n/rank)
 #' clustertrue.z <- rep(1:rank, each = n/rank)
 #' A <- matrix(0, n, n)
-#' for(i in 1:n){
-#'     for(j in 1:n){
-#'         A[i,j]<-ifelse(clustertrue.y[i] == clustertrue.z[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
+#' for(i in 1:n) {
+#'     for(j in 1:n) {
+#'         A[i, j] <- ifelse(clustertrue.y[i] == clustertrue.z[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
 #'     }
 #' }
 #' diag(A) <- 0

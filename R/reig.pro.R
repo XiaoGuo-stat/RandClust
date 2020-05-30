@@ -23,7 +23,8 @@
 #' @param approA A logical variable indicating whether the approximated \code{A} is returned. Default is \code{FALSE}.
 #'
 #' @return \item{vectors}{The randomized \code{rank+p} eigen vectors.}
-#'         \item{values}{The \code{rank+p} eigen values.} \item{approA}{The approximated data matrix if requested.}
+#'         \item{values}{The \code{rank+p} eigen values.}
+#'         \item{approA}{The approximated data matrix if requested.}
 #'
 #' @references N. Halko, P.-G. Martinsson, and J. A. Tropp. (2011)
 #' \emph{Finding structure with randomness: Probabilistic algorithms for constructing approximate matrix decompositions},
