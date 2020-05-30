@@ -33,7 +33,7 @@
 #' clustertrue.z <- rep(1:rank, each = n/rank)
 #' A <- matrix(0, n, n)
 #' for(i in 1:n){
-#'      for(j in 1:n){
+#'     for(j in 1:n){
 #'         A[i,j]<-ifelse(clustertrue.y[i] == clustertrue.z[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
 #'     }
 #' }
@@ -44,21 +44,18 @@
 #' @export rsvd.sam
 #'
 #'
-rsvd.sam <- function(A, P, k = max(nu, nv), nu, nv, tol = 1e-5, ...){
-  #Obtain the sparsified matrix
-  rA <- rsample (A, P)
+rsvd.sam <- function(A, P, k = max(nu, nv), nu, nv, tol = 1e-5, ...)
+{
+    # Obtain the sparsified matrix
+    rA <- rsample(A, P)
 
-  #Find the leading singular vectors of the sparsified matrix
-  partialsvd <- svds (rA, k = k, nu = nu, nv =nv, tol = tol, ...)
-  u <- partialsvd$u
-  v <- partialsvd$v
-  d <- partialsvd$d
+    # Find the leading singular vectors of the sparsified matrix
+    # partialsvd <- svds(rA, k = k, nu = nu, nv = nv, opts = list(ncv = 2 * k, tol = tol), ...)
+    partialsvd <- irlba(rA, nu = nu, nv = nv, tol = tol, ...)
+    u <- partialsvd$u
+    v <- partialsvd$v
+    d <- partialsvd$d
 
-  #Output the result
-
-  list(u = u, v = v, d = d, sparA = rA)
-
+    # Output the result
+    list(u = u, v = v, d = d, sparA = rA)
 }
-
-
-

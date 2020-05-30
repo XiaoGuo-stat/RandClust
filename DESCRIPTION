@@ -12,6 +12,7 @@ LazyData: true
 Imports:
     Rcpp,
     RSpectra,
+    irlba,
     stats,
     RcppZiggurat,
     Matrix,
