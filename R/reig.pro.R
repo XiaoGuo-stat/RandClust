@@ -13,7 +13,7 @@
 #'
 #'
 #'
-#' @param A Input data matrix. The matrix should be a symmetric matrix but not necessarily be the adjacency matrix of a network.
+#' @param A Input data matrix of class "\code{dgCMatrix}". The matrix should be a symmetric matrix but not necessarily be the adjacency matrix of a network.
 #' @param rank The target rank of the low-rank decomposition.
 #' @param p The oversampling parameter. It need to be a positive integer number. Default value is 10.
 #' @param q The power parameter. It need to be a positive integer number. Default value is 2.
@@ -36,84 +36,67 @@
 #' rank <- 2
 #' clustertrue <- rep(1:rank, each = n/rank)
 #' A <- matrix(0, n, n)
-#' for(i in 1:n){
-#'      for(j in 1:n){
-#'         A[i,j]<-ifelse(clustertrue[i] == clustertrue[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
+#' for(i in 1:(n - 1)) {
+#'     for(j in (i + 1):n) {
+#'         A[i, j] <- ifelse(clustertrue[i] == clustertrue[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
 #'     }
 #' }
-#' diag(A)<-0
+#' diag(A) <- 0
+#' A <- A + t(A)
+#' A <- as(A, "dgCMatrix")
 #' reig.pro(A, rank)
 #'
 #' @export reig.pro
 #'
 #'
-reig.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE){
-
-    #Dim of input matrix
+reig.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE) {
+    # Dim of input matrix
     n <- nrow(A)
-    Acoord <- as(A, "dgTMatrix")
-	  Ai <- Acoord@i
-	  Aj <- Acoord@j
 
-	  #Set the reduced dimension
+    # Get coordinates of nonzero elements
+    Acoord <- sparse_matrix_coords(A)
 
+	  # Set the reduced dimension
     l <- round(rank) + round(p)
 
-
-    #Generate a random test matrix O
-
+    # Generate a random test matrix O
+    zsetseed(sample(2147483647L, 1))
+    pre_alloc <- matrix(0, n, l)
     O <- switch(dist,
-                normal = matrix(zrnormR(l*n), n, l),
+                normal = zrnormVec(pre_alloc),
                 unif = matrix(runif(l*n), n, l),
                 rademacher = matrix(sample(c(-1,1), (l*n), replace = TRUE, prob = c(0.5,0.5)), n, l),
                 stop("The sampling distribution is not supported!"))
 
-    #Build sketch matrix Y : Y = A * O
+    # Build sketch matrix Y : Y = A * O
+	  Y <- spbin_power_prod(Acoord, O, q = 0)
 
-	  Y <- spbin_power_prod(Ai, Aj, O, q = 0)
-    remove(O)
-
-    #Orthogonalize Y using QR decomposition: Y=QR
-
+    # Orthogonalize Y using QR decomposition: Y=QR
     if( q > 0 ) {
         for( i in 1:q) {
             Y <- qr_Q(Y)
-            Z <- spbin_power_crossprod(Ai, Aj, Y, q = 0)
+            Z <- spbin_power_crossprod(Acoord, Y, q = 0)
             Z <- qr_Q(Z)
-            Y <- spbin_power_prod(Ai, Aj, Z, q = 0)
+            Y <- spbin_power_prod(Acoord, Z, q = 0)
         }
-        remove(Z)
     }
-
     Q <- qr_Q(Y)
-    remove(Y)
 
+    # Obtain the smaller matrix B := Q' * A * Q
+    B <- crossprod(spbin_power_crossprod(Acoord, Q, q = 0), Q)
 
-    #Obtain the smaller matrix B := Q' * A * Q
-
-	  B <- crossprod(Q, spbin_power_prod(Ai, Aj, Q, q = 0))
-
-	  #Compute the eigenvalue decomposition of B and recover the approximated singular vectors of A
-
+	  # Compute the eigenvalue decomposition of B and recover the approximated eigenvectors of A
 	  fit <- eigen(B, symmetric = TRUE)
 
 	  vectors <- Q %*% fit$vectors
 	  values <- fit$values
 
-	  #Output the result
-
-	  if(approA == FALSE){
-
-	    list(vectors = vectors, values =values)
-
-	 }
-	  else{
-
-	    #Compute the approximated matrix of the original A
-
-	    C  <- Q %*% B %*% t(Q)
-	    list(vectors = vectors, values =values, approA = C)
-
+	  # Output the result
+	  if(approA == FALSE) {
+	      list(vectors = vectors, values =values)
+	  } else {
+	      # Compute the approximated matrix of the original A
+	      C  <- Q %*% B %*% t(Q)
+	      list(vectors = vectors, values =values, approA = C)
 	  }
 }
-

@@ -13,7 +13,7 @@
 #'
 #'
 #'
-#' @param A Input data matrix. Not necessarily be the adjacency matrix of a network.
+#' @param A Input data matrix of class "\code{dgCMatrix}". Not necessarily be the adjacency matrix of a network.
 #' @param rank The target rank of the low-rank decomposition.
 #' @param p The oversampling parameter. It need to be a positive integer number. Default value is 10.
 #' @param q The power parameter. It need to be a positive integer number. Default value is 2.
@@ -32,17 +32,19 @@
 #'
 #' @examples
 #'
+#' library(Matrix)
 #' n <- 100
 #' rank <- 2
 #' clustertrue.y <- rep(1:rank, each = n/rank)
 #' clustertrue.z <- rep(1:rank, each = n/rank)
 #' A <- matrix(0, n, n)
-#' for(i in 1:n){
-#'      for(j in 1:n){
-#'         A[i,j]<-ifelse(clustertrue.y[i] == clustertrue.z[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
+#' for(i in 1:n) {
+#'      for(j in 1:n) {
+#'         A[i, j] <- ifelse(clustertrue.y[i] == clustertrue.z[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
 #'     }
 #' }
-#' diag(A)<-0
+#' diag(A) <- 0
+#' A <- as(A, "dgCMatrix")
 #' rsvd.pro(A, rank)
 #'
 #' @export rsvd.pro
@@ -51,9 +53,7 @@
 rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE, nthread = 1) {
     # Get coordinates of nonzero elements
     n <- nrow(A)
-    Acoord <- as(A, "dgTMatrix")
-    Ai <- Acoord@i
-    Aj <- Acoord@j
+    Acoord <- sparse_matrix_coords(A, nthread)
 
     # The approximation for the column space
     # Set the reduced dimension for the column space
@@ -64,12 +64,12 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE, nt
     pre_alloc <- matrix(0, n, ly)
     Oy <- switch(dist,
                  normal = zrnormVec(pre_alloc),
-                 unif = matrix(dqrunif(ly*n), n, ly),
+                 unif = matrix(runif(ly*n), n, ly),
                  rademacher = matrix(sample(c(-1,1), (ly*n), replace = TRUE, prob = c(0.5,0.5)), n, ly),
                  stop("The sampling distribution is not supported!"))
 
     # Build the sketch matrix Y : Y = (A * A')^q * A * Oy
-    Y <- spbin_power_prod(Ai, Aj, Oy, q, nthread)
+    Y <- spbin_power_prod(Acoord, Oy, q, nthread)
 
     # The approximation for the row space
     # Set the reduced dimension for the row space
@@ -83,7 +83,7 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE, nt
                  stop("The sampling distribution is not supported!"))
 
     # Build sketch matrix Z : Z = (A' * A)^q * A' * Oz
-    Z <- spbin_power_crossprod(Ai, Aj, Oz, q, nthread)
+    Z <- spbin_power_crossprod(Acoord, Oz, q, nthread)
 
     # Orthogonalize Y using QR decomposition: Y = Q * R1
     # Q <- qr_Q(Y)
@@ -96,7 +96,7 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE, nt
     T <- QT[[2]]
 
     # Obtain the smaller matrix B := Q' * A * T
-    B <- crossprod(Q , spbin_power_prod(Ai, Aj, T, 0))
+    B <- crossprod(spbin_power_crossprod(Acoord, Q, 0, nthread), T)
 
     # Compute the SVD of B and recover the approximated singular vectors of A
     fit <- svd(B)
