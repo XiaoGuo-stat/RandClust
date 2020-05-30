@@ -1,9 +1,10 @@
 #include <RcppEigen.h>
 
 using Rcpp::NumericVector;
+using Rcpp::IntegerVector;
 
-typedef Eigen::SparseMatrix<double> SpMat;
-typedef Eigen::Map<SpMat> MapSpMat;
+using SpMat = Eigen::SparseMatrix<double>;
+using MapSpMat = Eigen::Map<SpMat>;
 
 //' Sample a sparse matrix
 //'
@@ -22,7 +23,8 @@ typedef Eigen::Map<SpMat> MapSpMat;
 // [[Rcpp::export]]
 Rcpp::S4 rsample(Rcpp::S4 A, double P)
 {
-    SpMat A2 = Rcpp::as<SpMat>(A);
+    // A simpler but less efficient implementation
+    /* SpMat A2 = Rcpp::as<SpMat>(A);
     const int nnz = A2.nonZeros();
     double* xptr = A2.valuePtr();
     for(int i = 0; i < nnz; i++)
@@ -32,8 +34,43 @@ Rcpp::S4 rsample(Rcpp::S4 A, double P)
 
     A2.prune(0.0);
     A2.makeCompressed();
+    return Rcpp::wrap(A2); */
 
-    return Rcpp::wrap(A2);
+    MapSpMat A2 = Rcpp::as<MapSpMat>(A);
+    const int n = A2.cols();
+    const int nnz = A2.nonZeros();
+    const int* inner = A2.innerIndexPtr();
+    const int* outer = A2.outerIndexPtr();
+
+    IntegerVector slotp(n + 1);  // will be initialized to 0
+    int* new_outer = slotp.begin();
+    std::vector<int> new_inner;
+    new_inner.reserve(nnz * P * 1.2);
+
+    for(int j = 0; j < n; j++)
+    {
+        const int* Ai_start = inner + outer[j];
+        const int* Ai_end = inner + outer[j + 1];
+        for(; Ai_start < Ai_end; Ai_start++)
+        {
+            if(R::unif_rand() <= P)
+            {
+                new_inner.emplace_back(*Ai_start);
+                (new_outer[j + 1])++;
+            }
+        }
+        new_outer[j + 1] += new_outer[j];
+    }
+
+    Rcpp::S4 res("dgCMatrix");
+    NumericVector slotx(new_inner.size(), 1.0);
+
+    res.slot("i") = Rcpp::wrap(new_inner);
+    res.slot("p") = slotp;
+    res.slot("Dim") = IntegerVector::create(n, n);
+    res.slot("x") = slotx;
+
+    return res;
 }
 
 //' Sample a symmetric sparse matrix
