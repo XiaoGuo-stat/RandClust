@@ -19,4 +19,5 @@ Imports:
     Gmedian,
     igraph
 LinkingTo: Rcpp, RcppEigen
+SystemRequirements: C++11
 RoxygenNote: 7.1.0
