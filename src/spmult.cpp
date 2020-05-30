@@ -1,4 +1,5 @@
 #include <RcppEigen.h>
+#include "parallel_radix_sort.h"
 
 using Rcpp::List;
 using Rcpp::NumericMatrix;
@@ -50,19 +51,74 @@ private:
     const MapSpMat m_sp;
     const int m_n;
     const int m_nnz;
+    const bool m_compute_transpose;
+    Coords m_At_inner;
+    Coords m_At_outer;
 
 public:
     // mat is a binary sparse matrix of class dgCMatrix
-    BinSpMat(Rcpp::S4 mat) :
+    BinSpMat(Rcpp::S4 mat, int nthread = 1) :
         m_sp(Rcpp::as<MapSpMat>(mat)),
-        m_n(m_sp.rows()), m_nnz(m_sp.nonZeros())
-    {}
+        m_n(m_sp.rows()), m_nnz(m_sp.nonZeros()),
+        m_compute_transpose(m_nnz > 10 * m_n)
+    {
+        // If the matrix is "dense", then compute the transpose for faster
+        // matrix-vector multiplication
+        if(!m_compute_transpose)
+            return;
+
+        m_At_inner.resize(m_nnz);
+        m_At_outer.resize(m_n + 1);
+        // Make a copy of the row indices of A
+        int* Ai = new int[m_nnz];
+        std::copy(m_sp.innerIndexPtr(), m_sp.innerIndexPtr() + m_nnz, Ai);
+        // Expand column indices
+        const int* outer = m_sp.outerIndexPtr();
+        int* Aj = &m_At_inner[0];
+        for(int k = 0; k < m_n; k++)
+        {
+            const int len = outer[k + 1] - outer[k];
+            std::fill(Aj, Aj + len, k);
+            Aj += len;
+        }
+        // Sort row indices in ascending order, and arrange column indices accordingly
+        parallel_radix_sort::SortPairs(Ai, &m_At_inner[0], m_nnz, nthread);
+
+        // Compute outer indices of A'
+        int start = 0, row = 0;
+        for(int l = 0; l < m_nnz - 1; l++)
+        {
+            row = Ai[l];
+            if(Ai[l + 1] > row)
+            {
+                m_At_outer[row + 1] = l + 1 - start;
+                start = l + 1;
+            }
+        }
+        m_At_outer[Ai[start] + 1] = m_nnz - start;
+        for(int i = 1; i < m_n; i++)
+            m_At_outer[i] += m_At_outer[i - 1];
+        m_At_outer[m_n] = m_nnz;
+
+        delete[] Ai;
+    }
 
     // res = A * v
     void prod(const double* v, double* res) const
     {
-        std::fill(res, res + m_n, 0.0);
+        if(m_compute_transpose)
+        {
+            const int* inner = &m_At_inner[0];
+            const int* outer = &m_At_outer[0];
+            for(int i = 0; i < m_n; i++)
+            {
+                const int* Aj_start = inner + outer[i];
+                res[i] = gather_sum(v, Aj_start, outer[i + 1] - outer[i]);
+            }
+            return;
+        }
 
+        std::fill(res, res + m_n, 0.0);
         const int* inner = m_sp.innerIndexPtr();
         const int* outer = m_sp.outerIndexPtr();
         for(int j = 0; j < m_n; j++)
@@ -93,9 +149,9 @@ public:
 
 
 // [[Rcpp::export]]
-SEXP sparse_matrix_coords(Rcpp::S4 mat)
+SEXP sparse_matrix_coords(Rcpp::S4 mat, int nthread = 1)
 {
-    BinSpMat* sp = new BinSpMat(mat);
+    BinSpMat* sp = new BinSpMat(mat, nthread);
     return Rcpp::XPtr<BinSpMat>(sp, true);
 }
 
