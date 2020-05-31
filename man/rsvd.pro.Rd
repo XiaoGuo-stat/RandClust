@@ -20,6 +20,8 @@ rsvd.pro(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE, nthread = 1)
 is \code{"normal"}.}
 
 \item{approA}{A logical variable indicating whether the approximated \code{A} is returned. Default is \code{FALSE}.}
+
+\item{nthread}{Maximum number of threads for specific computations which could be implemented in parallel. Default is 1.}
 }
 \value{
 \item{u}{The randomized left \code{rank+p} singular vectors.} \item{v}{The randomized right \code{rank+p} singular vectors.}

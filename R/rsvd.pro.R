@@ -21,6 +21,7 @@
 #'             \code{"unif"} (uniform distribution from -1 to 1), or \code{"rademacher"} (randemacher distribution). Default
 #'             is \code{"normal"}.
 #' @param approA A logical variable indicating whether the approximated \code{A} is returned. Default is \code{FALSE}.
+#' @param nthread Maximum number of threads for specific computations which could be implemented in parallel. Default is 1.
 #'
 #' @return \item{u}{The randomized left \code{rank+p} singular vectors.} \item{v}{The randomized right \code{rank+p} singular vectors.}
 #'         \item{d}{The \code{rank+p} singular values.} \item{approA}{The approximated data matrix obtained by {\eqn{udv}'} if requested.}
@@ -64,7 +65,7 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE, nt
     pre_alloc <- matrix(0, n, ly)
     Oy <- switch(dist,
                  normal = zrnormVec(pre_alloc),
-                 unif = matrix(runif(ly*n), n, ly),
+                 unif = matrix(dqrunif(ly*n), n, ly),
                  rademacher = matrix(sample(c(-1,1), (ly*n), replace = TRUE, prob = c(0.5,0.5)), n, ly),
                  stop("The sampling distribution is not supported!"))
 
