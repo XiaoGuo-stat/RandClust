@@ -65,7 +65,7 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE, nt
     pre_alloc <- matrix(0, n, ly)
     Oy <- switch(dist,
                  normal = zrnormVec(pre_alloc),
-                 unif = matrix(dqrunif(ly*n), n, ly),
+                 unif = matrix(runif(ly*n), n, ly),
                  rademacher = matrix(sample(c(-1,1), (ly*n), replace = TRUE, prob = c(0.5,0.5)), n, ly),
                  stop("The sampling distribution is not supported!"))
 
