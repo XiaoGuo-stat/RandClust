@@ -30,9 +30,10 @@
 #' k <- 2
 #' clustertrue <- rep(1:k, each = n/k)
 #' A <- matrix(0, n, n)
-#' for(i in 1:n) {
-#'     for(j in 1:n) {
-#'         A[i, j] <- ifelse(clustertrue[i] == clustertrue[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
+#' for(i in 1:(n-1)) {
+#'     for(j in (i+1):n) {
+#'         A[i, j] <- ifelse(clustertrue[i] == clustertrue[j], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
+#'         A[j, i] <- A[i, j]
 #'     }
 #' }
 #' diag(A) <- 0

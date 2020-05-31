@@ -6,7 +6,7 @@
 #'
 #' This function computes the randomized SVD of a data matrix using the random
 #' sampling scheme. The data matrix \code{A} is first sampled to obtain a sparsified matrix.
-#' An iterative algorithm (\code{\link[RSpectra]{svds}}) for computing the leading singular vectors is then performed on the
+#' An iterative algorithm (\code{\link[irlba]{irlba}}) for computing the leading singular vectors is then performed on the
 #' sparsified matrix to obtain the randomized singular vectors and singular values.
 #'
 #'
@@ -17,12 +17,12 @@
 #' @param nu Number of left singular vectors to be computed.
 #' @param nv Number of right singular vectors to be computed.
 #' @param tol Precision parameter of the iterative algorithm. Default is 1e-5.
-#' @param ... Additional arguments of function \code{\link[RSpectra]{svds}}.
+#' @param ... Additional arguments of function \code{\link[irlba]{irlba}}.
 
 #' @return \item{u}{The randomized left \code{nu} singular vectors.} \item{v}{The randomized right \code{nv} singular vectors.}
 #'         \item{d}{The \code{k} leading singular values.} \item{sparA}{The sparsified data matrix obtained by \code{rsample(A,P)}.}
 #'
-#' @seealso \code{\link[RandClust]{rsample}}, \code{\link[RSpectra]{svds}}.
+#' @seealso \code{\link[RandClust]{rsample}}, \code{\link[irlba]{irlba}}.
 #'
 #'
 #' @examples

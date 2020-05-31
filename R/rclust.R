@@ -35,14 +35,20 @@
 #'         \item{rvectors}{The randomized \code{k} eigen vectors computed by
 #'              \code{\link[RandClust]{reig.pro}} or \code{\link[RandClust]{reig.sam}}.}
 #' @export rclust
-#' @seealso \code{\link[RandClust]{reig.pro}}, \code{\link[RandClust]{rsvd.sam}}.
+#' @seealso \code{\link[RandClust]{reig.pro}}, \code{\link[RandClust]{reig.sam}}.
 #' @examples
 #' n <- 100
 #' k <- 2
-#' cluster <- rep(1:ky, each = n/k)
-#' probmat <- matrix(0.2, k, k)
-#' diag(probmat) <- 0.1
-#' A <- sample_scbm(type = "scbm", cluster.y = cluster, cluster.z = cluster, probmat = probmat, graph = FALSE)
+#' clustertrue <- rep(1:k, each = n/k)
+#' A <- matrix(0, n, n)
+#' for(i in 1:(n-1)){
+#'      for(j in (i+1):n){
+#'         A[i,j]<-ifelse(clustertrue[i] == clustertrue[j], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
+#'         A[j,i]<-A[i,j]
+#'     }
+#' }
+#' diag(A) <- 0
+#' A <- as(A, "dgCMatrix")
 #' rclust(A, method ="rsample", k = k, P = 0.7)
 #'
 #'

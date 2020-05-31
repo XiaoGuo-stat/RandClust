@@ -39,7 +39,7 @@
 #' A <- matrix(0, n, n)
 #' for(i in 1:(n - 1)) {
 #'     for(j in (i + 1):n) {
-#'         A[i, j] <- ifelse(clustertrue[i] == clustertrue[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
+#'         A[i, j] <- ifelse(clustertrue[i] == clustertrue[j], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
 #'     }
 #' }
 #' diag(A) <- 0
@@ -98,6 +98,6 @@ reig.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE) {
 	  } else {
 	      # Compute the approximated matrix of the original A
 	      C  <- Q %*% B %*% t(Q)
-	      list(vectors = vectors, values =values, approA = C)
+	      list(vectors = vectors, values = values, approA = C)
 	  }
 }
