@@ -53,9 +53,7 @@ reig.sam <- function(A, P, use_lower = TRUE, k, tol = 1e-5, ...){
   values <- partialeig$values
 
   #Output the result
-
   list(vectors = vectors, values = values, sparA = rA)
-
 }
 
 

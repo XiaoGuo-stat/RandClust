@@ -23,7 +23,8 @@ is \code{"normal"}.}
 }
 \value{
 \item{vectors}{The randomized \code{rank+p} eigen vectors.}
-        \item{values}{The \code{rank+p} eigen values.} \item{approA}{The approximated data matrix if requested.}
+        \item{values}{The \code{rank+p} eigen values.}
+        \item{approA}{The approximated data matrix if requested.}
 }
 \description{
 Compute the randomized eigenvalue decomposition of a symmetric matrix by random projection.
@@ -45,7 +46,7 @@ clustertrue <- rep(1:rank, each = n/rank)
 A <- matrix(0, n, n)
 for(i in 1:(n - 1)) {
     for(j in (i + 1):n) {
-        A[i, j] <- ifelse(clustertrue[i] == clustertrue[i], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
+        A[i, j] <- ifelse(clustertrue[i] == clustertrue[j], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
     }
 }
 diag(A) <- 0

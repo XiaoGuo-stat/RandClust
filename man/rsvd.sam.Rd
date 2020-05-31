@@ -20,7 +20,7 @@ rsvd.sam(A, P, k = max(nu, nv), nu, nv, tol = 1e-05, ...)
 
 \item{tol}{Precision parameter of the iterative algorithm. Default is 1e-5.}
 
-\item{...}{Additional arguments of function \code{\link[RSpectra]{svds}}.}
+\item{...}{Additional arguments of function \code{\link[irlba]{irlba}}.}
 }
 \value{
 \item{u}{The randomized left \code{nu} singular vectors.} \item{v}{The randomized right \code{nv} singular vectors.}
@@ -34,7 +34,7 @@ data matrix.
 \details{
 This function computes the randomized SVD of a data matrix using the random
 sampling scheme. The data matrix \code{A} is first sampled to obtain a sparsified matrix.
-An iterative algorithm (\code{\link[RSpectra]{svds}}) for computing the leading singular vectors is then performed on the
+An iterative algorithm (\code{\link[irlba]{irlba}}) for computing the leading singular vectors is then performed on the
 sparsified matrix to obtain the randomized singular vectors and singular values.
 }
 \examples{
@@ -55,5 +55,5 @@ rsvd.sam(A, P = 0.7, nu = rank, nv = rank)
 
 }
 \seealso{
-\code{\link[RandClust]{rsample}}, \code{\link[RSpectra]{svds}}.
+\code{\link[RandClust]{rsample}}, \code{\link[irlba]{irlba}}.
 }

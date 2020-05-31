@@ -41,18 +41,17 @@
 #' k <- 2
 #' clustertrue <- rep(1:k, each = n/k)
 #' A <- matrix(0, n, n)
-#' for(i in 1:(n-1)){
-#'      for(j in (i+1):n){
-#'         A[i,j]<-ifelse(clustertrue[i] == clustertrue[j], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
-#'         A[j,i]<-A[i,j]
+#' for(i in 1: (n-1)) {
+#'    for(j in (i+1):n) {
+#'        A[i, j] <- ifelse(clustertrue[i] == clustertrue[j], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
+#'        A[j, i] <- A[i, j]
 #'     }
 #' }
-#' diag(A) <- 0
 #' A <- as(A, "dgCMatrix")
-#' rclust(A, method ="rsample", k = k, P = 0.7)
+#' rclust(A, method = "rsample", k = k, P = 0.7)
 #'
 #'
-rclust <- function(A, method = c("rsample", "rproject"), k, p = 10, q = 2, dist = "normal", P, iter.max = 50, nstart = 10, ...){
+rclust <- function(A, method = c("rsample", "rproject"), k, p = 10, q = 2, dist = "normal", P, iter.max = 50, nstart = 10, ...) {
 
   #Compute the randomized eigen vectors
   if(method == "rsample"){
@@ -76,6 +75,5 @@ rclust <- function(A, method = c("rsample", "rproject"), k, p = 10, q = 2, dist 
 
 
   list(cluster = cluster, rvectors = A.u)
-
 }
 

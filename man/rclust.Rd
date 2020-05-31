@@ -65,14 +65,19 @@ The k-means is then performed on the randomized eigen vectors.
 \examples{
 n <- 100
 k <- 2
-cluster <- rep(1:ky, each = n/k)
-probmat <- matrix(0.2, k, k)
-diag(probmat) <- 0.1
-A <- sample_scbm(type = "scbm", cluster.y = cluster, cluster.z = cluster, probmat = probmat, graph = FALSE)
-rclust(A, method ="rsample", k = k, P = 0.7)
+clustertrue <- rep(1:k, each = n/k)
+A <- matrix(0, n, n)
+for(i in 1: (n-1)) {
+   for(j in (i+1):n) {
+       A[i, j] <- ifelse(clustertrue[i] == clustertrue[j], rbinom(1, 1, 0.2), rbinom(1, 1, 0.1))
+       A[j, i] <- A[i, j]
+    }
+}
+A <- as(A, "dgCMatrix")
+rclust(A, method = "rsample", k = k, P = 0.7)
 
 
 }
 \seealso{
-\code{\link[RandClust]{reig.pro}}, \code{\link[RandClust]{rsvd.sam}}.
+\code{\link[RandClust]{reig.pro}}, \code{\link[RandClust]{reig.sam}}.
 }

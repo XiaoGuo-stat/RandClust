@@ -70,27 +70,27 @@
 sample_scbm <- function(type = c("scbm", "dc-scbm"), cluster.y, cluster.z, theta.y, theta.z, probmat, graph = FALSE){
   n <- length(cluster.y)
   A <- Matrix(0, n, n, sparse = TRUE)
-  if (type=="scbm"){
-    for(i in 1:n){
-      for(j in 1:n){
+  if (type=="scbm") {
+    for(i in 1:n) {
+      for(j in 1:n) {
         A[i, j] <- rbinom (1, 1, probmat[cluster.y[i], cluster.z[j]])
       }
     }
     diag(A) <- 0
   }
-  if (type=="dc-scbm"){
-    for(i in 1:n){
-      for(j in 1:n){
+  if (type=="dc-scbm") {
+    for(i in 1:n) {
+      for(j in 1:n) {
         A[i, j] <- theta.y[i]*theta.z[j]*rbinom (1, 1, probmat[cluster.y[i], cluster.z[j]])
       }
     }
     diag(A) <- 0
   }
-  if(graph == FALSE){
+  if(graph == FALSE) {
     return(A)
   }
-  if(graph == TRUE){
-    g<-graph_from_adjacency_matrix(A, mode="directed")
+  if(graph == TRUE) {
+    g <- graph_from_adjacency_matrix(A, mode="directed")
     return(g)
   }
 }
