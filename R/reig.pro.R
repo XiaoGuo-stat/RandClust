@@ -74,7 +74,7 @@ reig.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE) {
 
     # Orthogonalize Y using QR decomposition: Y=QR
     if( q > 0 ) {
-        for( i in 1:q) {
+        for( i in 1:q ) {
             Y <- qr_Q(Y)
             Z <- spbin_power_crossprod(Acoord, Y, q = 0)
             Z <- qr_Q(Z)

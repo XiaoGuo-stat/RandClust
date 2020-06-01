@@ -67,7 +67,7 @@ List qr_Q2(NumericMatrix x1, NumericMatrix x2, int nthread = 2)
 
     NumericMatrix A1(Rcpp::no_init_matrix(m1, n1));
     NumericMatrix A2(Rcpp::no_init_matrix(m2, n2));
-    
+
     if(nthread > 1)
         nthread = 2;
 

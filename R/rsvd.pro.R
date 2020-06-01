@@ -79,7 +79,7 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE, nt
     # Generate a random test matrix Oz
     Oz <- switch(dist,
                  normal = zrnormVec(pre_alloc),
-                 unif = matrix(dqrunif(lz*n), n, lz),
+                 unif = matrix(runif(lz*n), n, lz),
                  rademacher = matrix(sample(c(-1,1), (lz*n), replace = TRUE, prob = c(0.5,0.5)), n, lz),
                  stop("The sampling distribution is not supported!"))
 
