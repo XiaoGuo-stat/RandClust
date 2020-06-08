@@ -3,7 +3,7 @@
 
 **RandClust** performs spectral clustering for large-scale directed and undirected networks using
 randomization techniques including the random projection and the random sampling. Specifically, the
-random-projection-based SVD (EVD) or the random-sampling-based SVD (EVD) is first computed for the 
+random-projection-based SVD (eigendecomposition) or the random-sampling-based SVD (eigendecomposition) is first computed for the 
 adjacency matrix of the directed (undirected) network. The k-means or the spherical k-median is 
 then performed on the randomized singular (eigen) vectors. 
 
