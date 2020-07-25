@@ -1,12 +1,11 @@
 Package: RandClust
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Randomized spectral clustering for large-scale networks
 Version: 0.1.0
 Author: Who wrote it
 Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Description: This package implements spectral clustering for large-scale directed and undirected networks using randomization techniques including the random projection and the random sampling. 
+License: GPL
 Encoding: UTF-8
 LazyData: true
 Imports:
