@@ -61,7 +61,7 @@ rclust <- function(A, method = c("rsample", "rproject"), k, p = 10, q = 2, dist 
 
   if(method == "rproject"){
     projeig <- reig.pro (A = A, rank = k, p = p, q = q, dist = dist, ...)
-    A.u <- projeig$u[, 1 : k]
+    A.u <- projeig$vectors[, 1 : k]
   }
 
 
