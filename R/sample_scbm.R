@@ -81,7 +81,7 @@ sample_scbm <- function(type = c("scbm", "dc-scbm"), cluster.y, cluster.z, theta
   if (type=="dc-scbm") {
     for(i in 1:n) {
       for(j in 1:n) {
-        A[i, j] <- theta.y[i]*theta.z[j]*rbinom (1, 1, probmat[cluster.y[i], cluster.z[j]])
+        A[i, j] <- rbinom (1, 1, theta.y[i]*theta.z[j]*probmat[cluster.y[i], cluster.z[j]])
       }
     }
     diag(A) <- 0
