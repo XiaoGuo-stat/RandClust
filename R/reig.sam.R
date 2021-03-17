@@ -6,7 +6,7 @@
 #'
 #' This function computes the randomized eigenvalue decomposition of a data matrix using the random
 #' sampling scheme. The data matrix \code{A} is first sampled to obtain a sparsified matrix.
-#' An iterative algorithm (\code{\link[RSpectra]{eigs}}) for computing the leading eigen vectors is then performed on the
+#' An iterative algorithm (\code{\link[RSpectra]{svds}}) for computing the leading eigen vectors is then performed on the
 #' sparsified matrix to obtain the randomized eigen vectors and eigen values.
 #'
 #'
@@ -15,13 +15,13 @@
 #' @param use_lower If \code{TRUE/FALSE}, only the lower/upper triangular part of \code{A} is used for sampling and the following eigendecomposition steps.
 #' @param k Number of eigen values requested.
 #' @param tol Precision parameter of the iterative algorithm. Default is 1e-5.
-#' @param ... Additional arguments of function \code{\link[RSpectra]{eigs}}.
+#' @param ... Additional arguments of function \code{\link[RSpectra]{svds}}.
 
 #' @return \item{vectors}{The randomized \code{k} eigen vectors.}
 #'         \item{values}{The \code{k} eigen values.}
 #'         \item{sparA}{The sparsified data matrix obtained by \code{rsample_sym(A,P)}.}
 #'
-#' @seealso \code{\link[RandClust]{rsample_sym}}, \code{\link[RSpectra]{eigs}}.
+#' @seealso \code{\link[RandClust]{rsample_sym}}, \code{\link[RSpectra]{svds}}.
 #'
 #'
 #' @examples
@@ -48,9 +48,9 @@ reig.sam <- function(A, P, use_lower = TRUE, k, tol = 1e-5, ...){
   rA <- rsample_sym (A, P, use_lower = use_lower)/P
 
   #Find the leading eigen vectors of the sparsified matrix
-  partialeig <- eigs_sym (rA, k = k, opts = list(tol = tol), ...)
-  vectors <- partialeig$vectors
-  values <- partialeig$values
+  partialeig <- svds (rA, k = k, opts = list(tol = tol), ...)
+  vectors <- partialeig$u
+  values <- partialeig$d
 
   #Output the result
   list(vectors = vectors, values = values, sparA = rA)
