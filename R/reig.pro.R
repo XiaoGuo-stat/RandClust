@@ -88,9 +88,9 @@ reig.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE) {
 
 	  # Compute the eigenvalue decomposition of B and recover the approximated eigenvectors of A
 	  fit <- eigen(B, symmetric = TRUE)
-
-	  vectors <- Q %*% fit$vectors
-	  values <- fit$values
+	  o <- order(abs(fit$values),decreasing=T)
+	  vectors <- Q %*% fit$vectors[,o]
+	  values <- fit$values[o]
 
 	  # Output the result
 	  if(approA == FALSE) {
