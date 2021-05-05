@@ -47,7 +47,7 @@
 rsvd.sam <- function(A, P, k = max(nu, nv), nu, nv, tol = 1e-5, ...)
 {
     # Obtain the sparsified matrix
-    rA <- rsample(A, P)
+    rA <- rsample(A, P)/P
 
     # Find the leading singular vectors of the sparsified matrix
     # partialsvd <- svds(rA, k = k, nu = nu, nv = nv, opts = list(ncv = 2 * k, tol = tol), ...)
