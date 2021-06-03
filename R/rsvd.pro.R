@@ -84,7 +84,8 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE, nt
                  stop("The sampling distribution is not supported!"))
 
     # Build sketch matrix Z : Z = (A' * A)^q * A' * Oz
-    Z <- spbin_power_crossprod(Acoord, Oz, q, nthread)
+    Z <- matrix(0, n, lz)
+    spbin_power_crossprod_inplace(Acoord, Oz, Z, q, nthread)
 
     # Orthogonalize Y using QR decomposition: Y = Q * R1
     # Q <- qr_Q(Y)
@@ -97,7 +98,9 @@ rsvd.pro <- function(A, rank, p = 10, q = 2, dist = "normal", approA = FALSE, nt
     T <- QT[[2]]
 
     # Obtain the smaller matrix B := Q' * A * T
-    B <- crossprod(spbin_power_crossprod(Acoord, Q, 0, nthread), T)
+    # Z = A' * Q, B = Z' * T
+    spbin_power_crossprod_inplace(Acoord, Q, Z, 0, nthread)
+    B <- crossprod(Z, T)
 
     # Compute the SVD of B and recover the approximated singular vectors of A
     fit <- svd(B)

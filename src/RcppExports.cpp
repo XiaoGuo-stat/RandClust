@@ -95,6 +95,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// spbin_power_crossprod_inplace
+void spbin_power_crossprod_inplace(SEXP coords, NumericMatrix P, NumericMatrix res, int q, int nthread);
+RcppExport SEXP _RandClust_spbin_power_crossprod_inplace(SEXP coordsSEXP, SEXP PSEXP, SEXP resSEXP, SEXP qSEXP, SEXP nthreadSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type coords(coordsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type P(PSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type res(resSEXP);
+    Rcpp::traits::input_parameter< int >::type q(qSEXP);
+    Rcpp::traits::input_parameter< int >::type nthread(nthreadSEXP);
+    spbin_power_crossprod_inplace(coords, P, res, q, nthread);
+    return R_NilValue;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_RandClust_qr_Q", (DL_FUNC) &_RandClust_qr_Q, 1},
@@ -104,6 +118,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_RandClust_sparse_matrix_coords", (DL_FUNC) &_RandClust_sparse_matrix_coords, 2},
     {"_RandClust_spbin_power_prod", (DL_FUNC) &_RandClust_spbin_power_prod, 4},
     {"_RandClust_spbin_power_crossprod", (DL_FUNC) &_RandClust_spbin_power_crossprod, 4},
+    {"_RandClust_spbin_power_crossprod_inplace", (DL_FUNC) &_RandClust_spbin_power_crossprod_inplace, 5},
     {NULL, NULL, 0}
 };
 

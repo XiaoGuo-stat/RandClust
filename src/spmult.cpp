@@ -5,35 +5,66 @@ using Rcpp::List;
 using Rcpp::NumericMatrix;
 using Rcpp::IntegerVector;
 
+// res = x[ind[0]] + x[ind[1]] + ... + x[ind[n-1]]
 #ifdef __AVX2__
 #include <immintrin.h>
-inline double gather_sum(const double* val, const int* idx_start, int n)
+inline double gather_sum(const double* x, const int* ind, int n)
 {
-    constexpr int simd_size = 4;
-    const int* idx_simd_end = idx_start + (n - n % simd_size);
-    const int* idx_end = idx_start + n;
+    constexpr int simd_size = 8;
+    const int* idx_end = ind + n;
+    // const int* idx_simd_end = ind + (n - n % simd_size);
+    // n % 8 == n & 7, see https://stackoverflow.com/q/3072665
+    const int tail_len = n & (simd_size - 1);
+    const int* idx_simd_end = idx_end - tail_len;
 
     __m256d resv = _mm256_set1_pd(0.0);
-    for(; idx_start < idx_simd_end; idx_start += simd_size)
+    for(; ind < idx_simd_end; ind += simd_size)
     {
-        __m128i idx = _mm_loadu_si128((__m128i*) idx_start);
-        __m256d v = _mm256_i32gather_pd(val, idx, sizeof(double));
-        resv += v;
+        __m128i idx1 = _mm_loadu_si128((__m128i*) ind);
+        __m256d v1 = _mm256_i32gather_pd(x, idx1, sizeof(double));
+        __m128i idx2 = _mm_loadu_si128((__m128i*) (ind + 4));
+        __m256d v2 = _mm256_i32gather_pd(x, idx2, sizeof(double));
+        resv += (v1 + v2);
     }
 
     double res = 0.0;
-    for(; idx_start < idx_end; idx_start++)
-        res += val[*idx_start];
+    // The remaining length must be one of 0, 1, 2, ..., 7
+    switch(tail_len)
+    {
+    case 0:
+        break;
+    case 1:
+        res = x[ind[0]];
+        break;
+    case 2:
+        res = x[ind[0]] + x[ind[1]];
+        break;
+    case 3:
+        res = x[ind[0]] + x[ind[1]] + x[ind[2]];
+        break;
+    case 4:
+        res = x[ind[0]] + x[ind[1]] + x[ind[2]] + x[ind[3]];
+        break;
+    case 5:
+        res = x[ind[0]] + x[ind[1]] + x[ind[2]] + x[ind[3]] + x[ind[4]];
+        break;
+    case 6:
+        res = x[ind[0]] + x[ind[1]] + x[ind[2]] + x[ind[3]] + x[ind[4]] + x[ind[5]];
+        break;
+    case 7:
+        res = x[ind[0]] + x[ind[1]] + x[ind[2]] + x[ind[3]] + x[ind[4]] + x[ind[5]] + x[ind[6]];
+        break;
+    }
 
     return res + resv[0] + resv[1] + resv[2] + resv[3];
 }
 #else
-inline double gather_sum(const double* val, const int* idx_start, int n)
+inline double gather_sum(const double* x, const int* ind, int n)
 {
     double res = 0.0;
-    const int* idx_end = idx_start + n;
-    for(; idx_start < idx_end; idx_start++)
-        res += val[*idx_start];
+    const int* idx_end = ind + n;
+    for(; ind < idx_end; ind++)
+        res += x[*ind];
     return res;
 }
 #endif
@@ -231,4 +262,43 @@ NumericMatrix spbin_power_crossprod(SEXP coords, NumericMatrix P, int q = 0, int
     }
 
     return res;
+}
+
+// res = (A'A)^q A'P, res is pre-allocated
+// [[Rcpp::export]]
+void spbin_power_crossprod_inplace(SEXP coords, NumericMatrix P, NumericMatrix res, int q = 0, int nthread = 1)
+{
+    Rcpp::XPtr<BinSpMat> sp(coords);
+    const int n = P.nrow();
+    const int k = P.ncol();
+    if(res.nrow() != n || res.ncol() != k)
+        Rcpp::stop("The result matrix must be pre-allocated");
+
+    const double* P_ptr = P.begin();
+    double* res_ptr = res.begin();
+
+    #pragma omp parallel for shared(P_ptr, res_ptr, sp) num_threads(nthread)
+    for(int j = 0; j < k; j++)
+    {
+        const double* v = P_ptr + j * n;
+        double* r = res_ptr + j * n;
+        // res = A'P
+        sp->tprod(v, r);
+
+        // Allocate workspace if needed
+        double* work = NULL;
+        if(q > 0)
+            work = new double[n];
+
+        // Power iterations
+        for(int i = 0; i < q; i++)
+        {
+            sp->prod(r, work);
+            sp->tprod(work, r);
+        }
+
+        // Free workspace
+        if(q > 0)
+            delete[] work;
+    }
 }
