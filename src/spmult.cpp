@@ -6,11 +6,41 @@ using Rcpp::NumericMatrix;
 using Rcpp::IntegerVector;
 
 // res = x[ind[0]] + x[ind[1]] + ... + x[ind[n-1]]
+// n < 8
+inline double gather_sum_short(const double* x, const int* ind, int n)
+{
+    switch(n)
+    {
+    case 0:
+        return 0.0;
+    case 1:
+        return x[ind[0]];
+    case 2:
+        return x[ind[0]] + x[ind[1]];
+    case 3:
+        return x[ind[0]] + x[ind[1]] + x[ind[2]];
+    case 4:
+        return x[ind[0]] + x[ind[1]] + x[ind[2]] + x[ind[3]];
+    case 5:
+        return x[ind[0]] + x[ind[1]] + x[ind[2]] + x[ind[3]] + x[ind[4]];
+    case 6:
+        return x[ind[0]] + x[ind[1]] + x[ind[2]] + x[ind[3]] + x[ind[4]] + x[ind[5]];
+    case 7:
+        return x[ind[0]] + x[ind[1]] + x[ind[2]] + x[ind[3]] + x[ind[4]] + x[ind[5]] + x[ind[6]];
+    }
+
+    return 0.0;
+}
+
+// res = x[ind[0]] + x[ind[1]] + ... + x[ind[n-1]]
 #ifdef __AVX2__
 #include <immintrin.h>
 inline double gather_sum(const double* x, const int* ind, int n)
 {
     constexpr int simd_size = 8;
+    if(n < simd_size)
+        return gather_sum_short(x, ind, n);
+
     const int* idx_end = ind + n;
     // const int* idx_simd_end = ind + (n - n % simd_size);
     // n % 8 == n & 7, see https://stackoverflow.com/q/3072665
@@ -27,40 +57,16 @@ inline double gather_sum(const double* x, const int* ind, int n)
         resv += (v1 + v2);
     }
 
-    double res = 0.0;
     // The remaining length must be one of 0, 1, 2, ..., 7
-    switch(tail_len)
-    {
-    case 0:
-        break;
-    case 1:
-        res = x[ind[0]];
-        break;
-    case 2:
-        res = x[ind[0]] + x[ind[1]];
-        break;
-    case 3:
-        res = x[ind[0]] + x[ind[1]] + x[ind[2]];
-        break;
-    case 4:
-        res = x[ind[0]] + x[ind[1]] + x[ind[2]] + x[ind[3]];
-        break;
-    case 5:
-        res = x[ind[0]] + x[ind[1]] + x[ind[2]] + x[ind[3]] + x[ind[4]];
-        break;
-    case 6:
-        res = x[ind[0]] + x[ind[1]] + x[ind[2]] + x[ind[3]] + x[ind[4]] + x[ind[5]];
-        break;
-    case 7:
-        res = x[ind[0]] + x[ind[1]] + x[ind[2]] + x[ind[3]] + x[ind[4]] + x[ind[5]] + x[ind[6]];
-        break;
-    }
-
+    const double res = gather_sum_short(x, ind, tail_len);
     return res + resv[0] + resv[1] + resv[2] + resv[3];
 }
 #else
 inline double gather_sum(const double* x, const int* ind, int n)
 {
+    if(n < 8)
+        return gather_sum_short(x, ind, n);
+
     double res = 0.0;
     const int* idx_end = ind + n;
     for(; ind < idx_end; ind++)

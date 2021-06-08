@@ -9,6 +9,10 @@ qr_Q2 <- function(x1, x2, nthread = 2L) {
     .Call(`_RandClust_qr_Q2`, x1, x2, nthread)
 }
 
+qr_Q2_inplace <- function(x1, x2, nthread = 2L) {
+    invisible(.Call(`_RandClust_qr_Q2_inplace`, x1, x2, nthread))
+}
+
 #' Sample a sparse matrix
 #'
 #' @param A A sparse matrix of type "dgCMatrix".

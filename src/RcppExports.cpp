@@ -30,6 +30,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// qr_Q2_inplace
+void qr_Q2_inplace(NumericMatrix x1, NumericMatrix x2, int nthread);
+RcppExport SEXP _RandClust_qr_Q2_inplace(SEXP x1SEXP, SEXP x2SEXP, SEXP nthreadSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type x1(x1SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type x2(x2SEXP);
+    Rcpp::traits::input_parameter< int >::type nthread(nthreadSEXP);
+    qr_Q2_inplace(x1, x2, nthread);
+    return R_NilValue;
+END_RCPP
+}
 // rsample
 Rcpp::S4 rsample(Rcpp::S4 A, double P);
 RcppExport SEXP _RandClust_rsample(SEXP ASEXP, SEXP PSEXP) {
@@ -113,6 +125,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_RandClust_qr_Q", (DL_FUNC) &_RandClust_qr_Q, 1},
     {"_RandClust_qr_Q2", (DL_FUNC) &_RandClust_qr_Q2, 3},
+    {"_RandClust_qr_Q2_inplace", (DL_FUNC) &_RandClust_qr_Q2_inplace, 3},
     {"_RandClust_rsample", (DL_FUNC) &_RandClust_rsample, 2},
     {"_RandClust_rsample_sym", (DL_FUNC) &_RandClust_rsample_sym, 3},
     {"_RandClust_sparse_matrix_coords", (DL_FUNC) &_RandClust_sparse_matrix_coords, 2},
