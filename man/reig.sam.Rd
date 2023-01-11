@@ -17,7 +17,7 @@ reig.sam(A, P, use_lower = TRUE, k, tol = 1e-05, ...)
 
 \item{tol}{Precision parameter of the iterative algorithm. Default is 1e-5.}
 
-\item{...}{Additional arguments of function \code{\link[RSpectra]{eigs}}.}
+\item{...}{Additional arguments of function \code{\link[RSpectra]{svds}}.}
 }
 \value{
 \item{vectors}{The randomized \code{k} eigen vectors.}
@@ -32,7 +32,7 @@ data matrix.
 \details{
 This function computes the randomized eigenvalue decomposition of a data matrix using the random
 sampling scheme. The data matrix \code{A} is first sampled to obtain a sparsified matrix.
-An iterative algorithm (\code{\link[RSpectra]{eigs}}) for computing the leading eigen vectors is then performed on the
+An iterative algorithm (\code{\link[RSpectra]{svds}}) for computing the leading eigen vectors is then performed on the
 sparsified matrix to obtain the randomized eigen vectors and eigen values.
 }
 \examples{
@@ -53,5 +53,5 @@ reig.sam(A, P = 0.7, use_lower = TRUE, k = k)
 
 }
 \seealso{
-\code{\link[RandClust]{rsample_sym}}, \code{\link[RSpectra]{eigs}}.
+\code{\link[RandClust]{rsample_sym}}, \code{\link[RSpectra]{svds}}.
 }
