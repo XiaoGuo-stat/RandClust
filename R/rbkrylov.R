@@ -26,9 +26,11 @@ rbkrylov <- function(A, rank, q = 2, dist = "normal", nthread = 1, tol = 1e-5, .
     B <- spbin_power_crossprod(Acoord, Q, 0, nthread)
 
     # Compute the partial SVD of B and recover the approximated singular vectors of A
-    partialsvd <- irlba(B, nu = 0, nv = rank, tol = tol, ...)
-    Z <- Q %*% partialsvd$v
+    #partialsvd <- irlba(B, nu = 0, nv = rank, tol = tol, ...)
+    #Z <- Q %*% partialsvd$v
 
+    partialsvd <- svd(B)
+    Z <- Q %*% partialsvd$v[, 1:rank]
     # Output the result
     Z
 }
