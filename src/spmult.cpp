@@ -203,12 +203,15 @@ NumericMatrix spbin_power_prod(SEXP coords, NumericMatrix P, int q = 0, int nthr
     const double* P_ptr = P.begin();
     double* res_ptr = res.begin();
 
+    // Compute the j-th column of res in parallel, j = 1, ..., k
     #pragma omp parallel for shared(P_ptr, res_ptr, sp) num_threads(nthread)
     for(int j = 0; j < k; j++)
     {
+        // v points to the j-th column of P
         const double* v = P_ptr + j * n;
+        // r points to the j-th column of res
         double* r = res_ptr + j * n;
-        // res = AP
+        // res[, j] <- A * P[, j]
         sp->prod(v, r);
 
         // Allocate workspace if needed
@@ -217,10 +220,56 @@ NumericMatrix spbin_power_prod(SEXP coords, NumericMatrix P, int q = 0, int nthr
             work = new double[n];
 
         // Power iterations
+        // res[, j] <- (AA')^q * res[, j]
         for(int i = 0; i < q; i++)
         {
             sp->tprod(r, work);
             sp->prod(work, r);
+        }
+
+        // Free workspace
+        if(q > 0)
+            delete[] work;
+    }
+
+    return res;
+}
+
+// res = [K0, K1, ..., Kq] = [AP, (AA')AP, ..., (AA')^q AP]
+// [[Rcpp::export]]
+NumericMatrix spbin_krylov_space(SEXP coords, NumericMatrix P, int q = 0, int nthread = 1)
+{
+    Rcpp::XPtr<BinSpMat> sp(coords);
+    const int n = P.nrow();
+    const int k = P.ncol();
+    NumericMatrix res(Rcpp::no_init_matrix(n, (q + 1) * k));
+    const double* P_ptr = P.begin();
+    double* res_ptr = res.begin();
+
+    // Compute the j-th column of K0, ..., Kq in parallel, j = 1, ..., k
+    #pragma omp parallel for shared(P_ptr, res_ptr, sp) num_threads(nthread)
+    for(int j = 0; j < k; j++)
+    {
+        // v points to the j-th column of P
+        const double* v = P_ptr + j * n;
+        // r points to the j-th column of K0
+        double* r = res_ptr + j * n;
+        // K0[, j] = A * P[, j]
+        sp->prod(v, r);
+
+        // Allocate workspace if needed
+        double* work = NULL;
+        if(q > 0)
+            work = new double[n];
+
+        // Power iterations for K1, ..., Kq
+        // Ki[, j] = (AA') * Ki-1[, j]
+        for(int i = 0; i < q; i++)
+        {
+            const double* rin = r + i * k * n;
+            double* rout = r + (i + 1) * k * n;
+            sp->tprod(rin, work);
+            sp->prod(work, rout);
         }
 
         // Free workspace
@@ -242,12 +291,15 @@ NumericMatrix spbin_power_crossprod(SEXP coords, NumericMatrix P, int q = 0, int
     const double* P_ptr = P.begin();
     double* res_ptr = res.begin();
 
+    // Compute the j-th column of res in parallel, j = 1, ..., k
     #pragma omp parallel for shared(P_ptr, res_ptr, sp) num_threads(nthread)
     for(int j = 0; j < k; j++)
     {
+        // v points to the j-th column of P
         const double* v = P_ptr + j * n;
+        // r points to the j-th column of res
         double* r = res_ptr + j * n;
-        // res = A'P
+        // res[, j] <- A' * P[, j]
         sp->tprod(v, r);
 
         // Allocate workspace if needed
@@ -256,6 +308,7 @@ NumericMatrix spbin_power_crossprod(SEXP coords, NumericMatrix P, int q = 0, int
             work = new double[n];
 
         // Power iterations
+        // res[, j] <- (A'A)^q * res[, j]
         for(int i = 0; i < q; i++)
         {
             sp->prod(r, work);
