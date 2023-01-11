@@ -116,7 +116,23 @@ void qr_Q_inplace_impl(double* qr, const double* tau, const int m, const int n)
     delete[] work;
 }
 
-// Two QR decompositions in parallel
+// In-place QR decomposition
+// [[Rcpp::export]]
+void qr_Q_inplace(NumericMatrix x)
+{
+    const int m = x.nrow();
+    const int n = x.ncol();
+    if(m < n)
+        Rcpp::stop("nrow(x) must be greater than or equal to ncol(x)");
+
+    double* tau = new double[n];
+    qr_inplace_impl(x.begin(), tau, m, n);
+    qr_Q_inplace_impl(x.begin(), tau, m, n);
+
+    delete [] tau;
+}
+
+// Two in-place QR decompositions in parallel
 // [[Rcpp::export]]
 void qr_Q2_inplace(NumericMatrix x1, NumericMatrix x2, int nthread = 2)
 {
