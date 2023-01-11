@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // qr_Q
 NumericMatrix qr_Q(NumericMatrix x);
 RcppExport SEXP _RandClust_qr_Q(SEXP xSEXP) {
@@ -28,6 +33,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type nthread(nthreadSEXP);
     rcpp_result_gen = Rcpp::wrap(qr_Q2(x1, x2, nthread));
     return rcpp_result_gen;
+END_RCPP
+}
+// qr_Q_inplace
+void qr_Q_inplace(NumericMatrix x);
+RcppExport SEXP _RandClust_qr_Q_inplace(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    qr_Q_inplace(x);
+    return R_NilValue;
 END_RCPP
 }
 // qr_Q2_inplace
@@ -93,6 +108,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// spbin_krylov_space
+NumericMatrix spbin_krylov_space(SEXP coords, NumericMatrix P, int q, int nthread);
+RcppExport SEXP _RandClust_spbin_krylov_space(SEXP coordsSEXP, SEXP PSEXP, SEXP qSEXP, SEXP nthreadSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type coords(coordsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type P(PSEXP);
+    Rcpp::traits::input_parameter< int >::type q(qSEXP);
+    Rcpp::traits::input_parameter< int >::type nthread(nthreadSEXP);
+    rcpp_result_gen = Rcpp::wrap(spbin_krylov_space(coords, P, q, nthread));
+    return rcpp_result_gen;
+END_RCPP
+}
 // spbin_power_crossprod
 NumericMatrix spbin_power_crossprod(SEXP coords, NumericMatrix P, int q, int nthread);
 RcppExport SEXP _RandClust_spbin_power_crossprod(SEXP coordsSEXP, SEXP PSEXP, SEXP qSEXP, SEXP nthreadSEXP) {
@@ -125,11 +154,13 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_RandClust_qr_Q", (DL_FUNC) &_RandClust_qr_Q, 1},
     {"_RandClust_qr_Q2", (DL_FUNC) &_RandClust_qr_Q2, 3},
+    {"_RandClust_qr_Q_inplace", (DL_FUNC) &_RandClust_qr_Q_inplace, 1},
     {"_RandClust_qr_Q2_inplace", (DL_FUNC) &_RandClust_qr_Q2_inplace, 3},
     {"_RandClust_rsample", (DL_FUNC) &_RandClust_rsample, 2},
     {"_RandClust_rsample_sym", (DL_FUNC) &_RandClust_rsample_sym, 3},
     {"_RandClust_sparse_matrix_coords", (DL_FUNC) &_RandClust_sparse_matrix_coords, 2},
     {"_RandClust_spbin_power_prod", (DL_FUNC) &_RandClust_spbin_power_prod, 4},
+    {"_RandClust_spbin_krylov_space", (DL_FUNC) &_RandClust_spbin_krylov_space, 4},
     {"_RandClust_spbin_power_crossprod", (DL_FUNC) &_RandClust_spbin_power_crossprod, 4},
     {"_RandClust_spbin_power_crossprod_inplace", (DL_FUNC) &_RandClust_spbin_power_crossprod_inplace, 5},
     {NULL, NULL, 0}

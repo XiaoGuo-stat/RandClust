@@ -9,6 +9,10 @@ qr_Q2 <- function(x1, x2, nthread = 2L) {
     .Call(`_RandClust_qr_Q2`, x1, x2, nthread)
 }
 
+qr_Q_inplace <- function(x) {
+    invisible(.Call(`_RandClust_qr_Q_inplace`, x))
+}
+
 qr_Q2_inplace <- function(x1, x2, nthread = 2L) {
     invisible(.Call(`_RandClust_qr_Q2_inplace`, x1, x2, nthread))
 }
@@ -59,6 +63,10 @@ sparse_matrix_coords <- function(mat, nthread = 1L) {
 
 spbin_power_prod <- function(coords, P, q = 0L, nthread = 1L) {
     .Call(`_RandClust_spbin_power_prod`, coords, P, q, nthread)
+}
+
+spbin_krylov_space <- function(coords, P, q = 0L, nthread = 1L) {
+    .Call(`_RandClust_spbin_krylov_space`, coords, P, q, nthread)
 }
 
 spbin_power_crossprod <- function(coords, P, q = 0L, nthread = 1L) {
