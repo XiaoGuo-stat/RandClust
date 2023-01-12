@@ -361,3 +361,49 @@ void spbin_power_crossprod_inplace(SEXP coords, NumericMatrix P, NumericMatrix r
             delete[] work;
     }
 }
+
+// res = [K0, K1, ..., Kq] = [A'P, (A'A)A'P, ..., (A'A)^q A'P]
+// res is pre-allocated
+// [[Rcpp::export]]
+void spbin_krylov_space_trans_inplace(SEXP coords, NumericMatrix P, NumericMatrix res, int q = 0, int nthread = 1)
+{
+    Rcpp::XPtr<BinSpMat> sp(coords);
+    const int n = P.nrow();
+    const int k = P.ncol();
+    if(res.nrow() != n || res.ncol() != ((q + 1) * k))
+        Rcpp::stop("The result matrix must be pre-allocated");
+
+    const double* P_ptr = P.begin();
+    double* res_ptr = res.begin();
+
+    // Compute the j-th column of K0, ..., Kq in parallel, j = 1, ..., k
+    #pragma omp parallel for shared(P_ptr, res_ptr, sp) num_threads(nthread)
+    for(int j = 0; j < k; j++)
+    {
+        // v points to the j-th column of P
+        const double* v = P_ptr + j * n;
+        // r points to the j-th column of K0
+        double* r = res_ptr + j * n;
+        // K0[, j] = A' * P[, j]
+        sp->tprod(v, r);
+
+        // Allocate workspace if needed
+        double* work = NULL;
+        if(q > 0)
+            work = new double[n];
+
+        // Power iterations for K1, ..., Kq
+        // Ki[, j] = (A'A) * Ki-1[, j]
+        for(int i = 0; i < q; i++)
+        {
+            const double* rin = r + i * k * n;
+            double* rout = r + (i + 1) * k * n;
+            sp->prod(rin, work);
+            sp->tprod(work, rout);
+        }
+
+        // Free workspace
+        if(q > 0)
+            delete[] work;
+    }
+}
