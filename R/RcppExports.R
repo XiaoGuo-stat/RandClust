@@ -77,3 +77,7 @@ spbin_power_crossprod_inplace <- function(coords, P, res, q = 0L, nthread = 1L) 
     invisible(.Call(`_RandClust_spbin_power_crossprod_inplace`, coords, P, res, q, nthread))
 }
 
+spbin_krylov_space_trans_inplace <- function(coords, P, res, q = 0L, nthread = 1L) {
+    invisible(.Call(`_RandClust_spbin_krylov_space_trans_inplace`, coords, P, res, q, nthread))
+}
+
