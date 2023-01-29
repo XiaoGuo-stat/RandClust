@@ -7,6 +7,7 @@
 rcoclust(
   A,
   method = c("rsample", "rproject"),
+  rank,
   ky,
   kz,
   p = 10,
@@ -26,6 +27,8 @@ rcoclust(
 \item{method}{The method for computing the randomized SVD. Random sampling-based SVD
 is implemented if \code{method="rsample"}, and random projection-based
 SVD is implemented if \code{method="rproject"}.}
+
+\item{rank}{The number of target rank for SVD.}
 
 \item{ky}{The number of target row clusters.}
 
@@ -82,6 +85,7 @@ The k-means or the spherical k-median is then performed on the randomized singul
 }
 \examples{
 n <- 120
+rank <- 2
 ky <- 2
 kz <- 3
 cluster.y <- rep(1:ky, each = n/ky)
@@ -89,8 +93,8 @@ cluster.z <- rep(1:kz, each = n/kz)
 probmat <- matrix(0.2, ky, kz)
 diag(probmat) <- 0.1
 A <- sample_scbm(type = "scbm", cluster.y, cluster.z, probmat = probmat, graph = FALSE)
-rcoclust(A, method ="rsample", ky, kz, P = 0.7, normalize = FALSE)
-rcoclust(A, method ="rproject", ky, kz, normalize = TRUE)
+rcoclust(A, method ="rsample", rank, ky, kz, P = 0.7, normalize = FALSE)
+rcoclust(A, method ="rproject", rank, ky, kz, normalize = TRUE)
 
 
 }
