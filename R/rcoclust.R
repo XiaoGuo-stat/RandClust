@@ -16,6 +16,7 @@
 #' @param method The method for computing the randomized SVD. Random sampling-based SVD
 #'               is implemented if \code{method="rsample"}, and random projection-based
 #'               SVD is implemented if \code{method="rproject"}.
+#' @param rank The number of target rank for SVD.
 #' @param ky The number of target row clusters.
 #' @param kz The number of target column clusters.
 #' @param p The oversampling parameter in the random projection scheme. Requested only
@@ -50,6 +51,7 @@
 #' @seealso \code{\link[RandClust]{rsvd.pro}}, \code{\link[RandClust]{rsvd.sam}}.
 #' @examples
 #' n <- 120
+#' rank <- 2
 #' ky <- 2
 #' kz <- 3
 #' cluster.y <- rep(1:ky, each = n/ky)
@@ -57,23 +59,23 @@
 #' probmat <- matrix(0.2, ky, kz)
 #' diag(probmat) <- 0.1
 #' A <- sample_scbm(type = "scbm", cluster.y, cluster.z, probmat = probmat, graph = FALSE)
-#' rcoclust(A, method ="rsample", ky, kz, P = 0.7, normalize = FALSE)
-#' rcoclust(A, method ="rproject", ky, kz, normalize = TRUE)
+#' rcoclust(A, method ="rsample", rank, ky, kz, P = 0.7, normalize = FALSE)
+#' rcoclust(A, method ="rproject", rank, ky, kz, normalize = TRUE)
 #'
 #'
-rcoclust <- function(A, method = c("rsample", "rproject"), ky, kz, p = 10, q = 2, dist = "normal", P, normalize = FALSE, iter.max = 50, nstartkmedian = 10, nstartkmeans = 10, ...){
+rcoclust <- function(A, method = c("rsample", "rproject"), rank, ky, kz, p = 10, q = 2, dist = "normal", P, normalize = FALSE, iter.max = 50, nstartkmedian = 10, nstartkmeans = 10, ...){
 
   #Compute the randomized singular vectors
   if(method == "rsample"){
-    samsvd <- rsvd.sam (A = A, P = P, nu = min(ky, kz), nv = min(ky, kz), ...)
+    samsvd <- rsvd.sam (A = A, P = P, nu = rank, nv = rank, ...)
     A.u <- samsvd$u
     A.v <- samsvd$v
   }
 
   if(method == "rproject"){
-    projsvd <- rsvd.pro (A = A, rank = min(ky, kz), p = p, q = q, dist = dist, ...)
-    A.u <- projsvd$u[, 1 : min(ky, kz)]
-    A.v <- projsvd$v[, 1 : min(ky, kz)]
+    projsvd <- rsvd.pro (A = A, rank = rank, p = p, q = q, dist = dist, ...)
+    A.u <- projsvd$u[, 1 : rank]
+    A.v <- projsvd$v[, 1 : rank]
   }
 
 
