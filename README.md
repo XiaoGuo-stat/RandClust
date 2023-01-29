@@ -34,8 +34,8 @@ The corresponding random-projection-based and random-sampling-based spectral co-
 performed respectively using 
 
 ```r
-rcoclust(A, method = "rsample", ky = 3, kz = 2, P = 0.7, normalize = FALSE)
-rcoclust(A, method = "rproject", ky = 3, kz =2, normalize = TRUE)
+rcoclust(A, method = "rsample", rank = 2, ky = 3, kz = 2, P = 0.7, normalize = FALSE)
+rcoclust(A, method = "rproject", rank = 2, ky = 3, kz =2, normalize = TRUE)
 ```
 
 The package also provides a function for sampling a sparse matrix with given probability:
